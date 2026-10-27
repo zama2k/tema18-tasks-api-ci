@@ -9,9 +9,11 @@ module.exports = defineConfig({
   testMatch: '**/*.e2e.test.js',
   outputDir: 'test-results',
 
-  // One worker per job: every test starts by emptying the shared database.
-  // Parallelism comes from sharding across CI jobs, each with its own PostgreSQL.
-  fullyParallel: false,
+  // One worker per job: every test starts by emptying the shared database, so tests must not
+  // overlap inside a job. Parallelism comes from sharding across CI jobs (each with its own
+  // PostgreSQL). fullyParallel makes Playwright shard per test instead of per file; without it a
+  // single test file would land entirely in shard 1 and leave the other shards empty.
+  fullyParallel: true,
   workers: 1,
   forbidOnly: IN_CI,
   retries: IN_CI ? 1 : 0,
