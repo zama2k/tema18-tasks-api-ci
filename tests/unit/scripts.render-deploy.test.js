@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { createFakeRender } = require('../../scripts/fake-render-server');
-const { createRenderClient, deployImage, RenderApiError, main } = require('../../scripts/render-deploy');
+const { createRenderClient, deployImage, findQueuedDeploy, normalizeDigest, RenderApiError, main } = require('../../scripts/render-deploy');
 
 const IMAGE = `ghcr.io/owner/repo@sha256:${'a'.repeat(64)}`;
 const noSleep = () => Promise.resolve();
@@ -128,9 +128,25 @@ describe('render-deploy client edge cases', () => {
     expect(error.message).not.toContain('k-123');
   });
 
-  test('a 202 without a deploy id is reported instead of being treated as success', async () => {
+  test('a 202 without a body is exposed as "no deploy yet", not as an error', async () => {
     const client = createRenderClient({ apiKey: 'k', fetchImpl: async () => response(202) });
-    await expect(client.triggerDeploy('srv', IMAGE)).rejects.toThrow(/returned no deploy id/);
+    await expect(client.triggerDeploy('srv', IMAGE)).resolves.toEqual({ status: 202, deploy: null });
+  });
+
+  test('listDeploys unwraps [{deploy, cursor}] and also accepts a flat array', async () => {
+    const wrapped = createRenderClient({ apiKey: 'k', fetchImpl: async () => response(200, [{ deploy: { id: 'a' }, cursor: 'c1' }, { deploy: { id: 'b' }, cursor: 'c2' }]) });
+    const flat = createRenderClient({ apiKey: 'k', fetchImpl: async () => response(200, [{ id: 'a' }]) });
+    const empty = createRenderClient({ apiKey: 'k', fetchImpl: async () => response(200, { not: 'an array' }) });
+
+    expect((await wrapped.listDeploys('srv')).map((d) => d.id)).toEqual(['a', 'b']);
+    expect((await flat.listDeploys('srv')).map((d) => d.id)).toEqual(['a']);
+    expect(await empty.listDeploys('srv')).toEqual([]);
+  });
+
+  test('listDeploys asks for 20 deploys by default, never just the latest one', async () => {
+    const fetchImpl = jest.fn(async () => response(200, []));
+    await createRenderClient({ apiKey: 'k', fetchImpl }).listDeploys('srv-1');
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.render.com/v1/services/srv-1/deploys?limit=20');
   });
 
   test('reads Retry-After from a 429', async () => {
@@ -148,7 +164,7 @@ describe('render-deploy client edge cases', () => {
 
   test('gives up after the maximum number of consecutive polling errors', async () => {
     const client = {
-      triggerDeploy: async () => ({ id: 'dep-1', status: 'created' }),
+      triggerDeploy: async () => ({ status: 201, deploy: { id: 'dep-1', status: 'created' } }),
       getDeploy: async () => {
         throw new RenderApiError('boom', { status: 503 });
       },
@@ -159,23 +175,107 @@ describe('render-deploy client edge cases', () => {
 
   test('does not retry a non retryable polling error', async () => {
     const getDeploy = jest.fn().mockRejectedValue(new RenderApiError('forbidden', { status: 403 }));
-    const client = { triggerDeploy: async () => ({ id: 'dep-1', status: 'created' }), getDeploy };
+    const client = { triggerDeploy: async () => ({ status: 201, deploy: { id: 'dep-1', status: 'created' } }), getDeploy };
 
     await expect(deployImage({ client, serviceId: 's', imageUrl: IMAGE, sleepFn: noSleep })).rejects.toThrow('forbidden');
     expect(getDeploy).toHaveBeenCalledTimes(1);
   });
 
   test('rejects an unknown status instead of polling forever', async () => {
-    const client = { triggerDeploy: async () => ({ id: 'dep-1', status: 'mystery' }), getDeploy: jest.fn() };
+    const client = { triggerDeploy: async () => ({ status: 201, deploy: { id: 'dep-1', status: 'mystery' } }), getDeploy: jest.fn() };
     await expect(deployImage({ client, serviceId: 's', imageUrl: IMAGE, sleepFn: noSleep })).rejects.toThrow('unknown status "mystery"');
   });
 
   test('a deploy that is already live returns without polling', async () => {
     const getDeploy = jest.fn();
-    const client = { triggerDeploy: async () => ({ id: 'dep-1', status: 'live' }), getDeploy };
+    const client = { triggerDeploy: async () => ({ status: 201, deploy: { id: 'dep-1', status: 'live' } }), getDeploy };
     const result = await deployImage({ client, serviceId: 's', imageUrl: IMAGE, sleepFn: noSleep });
     expect(result).toMatchObject({ status: 'live', polls: 0 });
     expect(getDeploy).not.toHaveBeenCalled();
+  });
+});
+
+describe('202 "Queued" answers', () => {
+  test('locates the queued deploy in the list (not on the first call) and follows it until live', async () => {
+    const fake = createFakeRender({ scenario: 'queued' });
+    const apiUrl = await fake.start();
+    const log = jest.fn();
+    try {
+      const client = createRenderClient({ apiKey: 'test-key', apiUrl });
+
+      const result = await deployImage({ client, serviceId: 'srv-test', imageUrl: IMAGE, sleepFn: noSleep, log });
+
+      expect(result).toMatchObject({ deployId: 'dep-001', status: 'live' });
+      const calls = fake.requests.map((r) => `${r.method} ${r.url}`);
+      expect(calls.slice(0, 3)).toEqual(['POST /v1/services/srv-test/deploys', 'GET /v1/services/srv-test/deploys?limit=20', 'GET /v1/services/srv-test/deploys?limit=20']);
+      expect(calls.some((c) => c.includes('limit=1&') || c.endsWith('limit=1'))).toBe(false);
+      expect(fake.state.triggers).toBe(1);
+      expect(log).toHaveBeenCalledWith(expect.stringContaining('queued deploy not listed yet (attempt 1/8)'));
+    } finally {
+      await fake.stop();
+    }
+  });
+
+  test('does not trigger a second deploy when listing fails', async () => {
+    const triggerDeploy = jest.fn().mockResolvedValue({ status: 202, deploy: null });
+    const listDeploys = jest.fn().mockRejectedValue(new RenderApiError('unavailable', { status: 503 }));
+
+    await expect(deployImage({ client: { triggerDeploy, listDeploys }, serviceId: 's', imageUrl: IMAGE, sleepFn: noSleep })).rejects.toThrow('unavailable');
+    expect(triggerDeploy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('findQueuedDeploy', () => {
+  const NOW = Date.parse('2026-10-27T10:00:00.000Z');
+  const deploy = (id, createdAt, image) => ({ id, createdAt, status: 'queued', image });
+  const clientWith = (...pages) => {
+    const listDeploys = jest.fn();
+    pages.forEach((page) => listDeploys.mockResolvedValueOnce(page));
+    return { listDeploys };
+  };
+  const base = { serviceId: 's', imageUrl: IMAGE, requestedAt: NOW, sleepFn: noSleep };
+
+  test('normalizeDigest accepts prefixes and uppercase', () => {
+    const hex = 'ab'.repeat(32);
+    expect(normalizeDigest(`SHA256:${hex.toUpperCase()}`)).toBe(hex);
+    expect(normalizeDigest(hex)).toBe(hex);
+    expect(normalizeDigest(`ghcr.io/o/r@sha256:${hex}`)).toBe(hex);
+    expect(normalizeDigest('latest')).toBeNull();
+    expect(normalizeDigest(undefined)).toBeNull();
+  });
+
+  test('picks the newest deploy of our digest created after the request, matching by sha or ref in any case', async () => {
+    const ours = 'a'.repeat(64);
+    const client = clientWith([
+      deploy('other-image', '2026-10-27T10:00:05.000Z', { sha: `sha256:${'c'.repeat(64)}` }),
+      deploy('too-old', '2026-10-26T10:00:00.000Z', { sha: `sha256:${ours}` }),
+      deploy('older-match', '2026-10-27T09:59:30.000Z', { sha: `SHA256:${ours.toUpperCase()}` }),
+      deploy('newest-match', '2026-10-27T10:00:03.000Z', { ref: `ghcr.io/o/r@sha256:${ours}` }),
+      deploy('git-backed', '2026-10-27T10:00:04.000Z', undefined),
+    ]);
+
+    const found = await findQueuedDeploy({ ...base, client });
+
+    expect(found.id).toBe('newest-match');
+    expect(client.listDeploys).toHaveBeenCalledWith('s', { limit: 20 });
+  });
+
+  test('tolerates clock skew between the runner and Render', async () => {
+    const client = clientWith([deploy('skewed', '2026-10-27T09:58:30.000Z', { sha: `sha256:${'a'.repeat(64)}` })]);
+    expect((await findQueuedDeploy({ ...base, client })).id).toBe('skewed');
+  });
+
+  test('retries while the deploy is not listed and then reports a clear error', async () => {
+    const client = { listDeploys: jest.fn().mockResolvedValue([]) };
+    const sleepFn = jest.fn().mockResolvedValue();
+
+    await expect(findQueuedDeploy({ ...base, client, attempts: 3, sleepFn })).rejects.toThrow(/Render queued the deploy \(HTTP 202\) but no recent deploy with image digest sha256:aaaaaaaaaaaa/);
+    expect(client.listDeploys).toHaveBeenCalledTimes(3);
+    expect(sleepFn).toHaveBeenCalledTimes(2);
+  });
+
+  test('refuses to look up an image that has no digest', async () => {
+    await expect(findQueuedDeploy({ ...base, imageUrl: 'ghcr.io/o/r:main', client: { listDeploys: jest.fn() } })).rejects.toThrow(/no sha256 digest/);
   });
 });
 

@@ -7,6 +7,7 @@
  *     --api-url http://127.0.0.1:3102/v1 --poll-interval 1 --image ghcr.io/o/r@sha256:<64 hex>
  *
  * Scenarios: success | build-failed | never-live | flaky (503 while polling) | rate-limited (429 on trigger)
+ *            | queued (202 without a body; the deploy only shows up in the list, and not on the first call)
  */
 const http = require('node:http');
 const { parseArgs } = require('./lib/util');
@@ -17,12 +18,23 @@ const SCENARIOS = {
   'never-live': ['created', 'update_in_progress'],
   flaky: ['created', 'update_in_progress', 'update_in_progress', 'live'],
   'rate-limited': ['created', 'live'],
+  queued: ['queued', 'build_in_progress', 'update_in_progress', 'live'],
 };
+
+const sha256Of = (imageUrl) => (/sha256:[0-9a-f]{64}/i.exec(imageUrl) || [''])[0];
 
 function createFakeRender({ apiKey = 'test-key', serviceId = 'srv-test', scenario = 'success' } = {}) {
   if (!SCENARIOS[scenario]) throw new Error(`unknown scenario "${scenario}"`);
   const requests = [];
-  const state = { polls: 0, triggers: 0, deploys: new Map() };
+  const state = { polls: 0, triggers: 0, lists: 0, deploys: new Map() };
+  const publicDeploy = (id, deploy, status) => ({
+    id,
+    status,
+    createdAt: deploy.createdAt,
+    image: { ref: deploy.imageUrl, sha: sha256Of(deploy.imageUrl) },
+  });
+  // Decoys the client must not pick: a recent deploy of another image and an old deploy of ours.
+  const decoy = (id, imageUrl, ageMs) => ({ id, imageUrl, step: 0, createdAt: new Date(Date.now() - ageMs).toISOString() });
 
   const server = http.createServer((req, res) => {
     let raw = '';
@@ -38,7 +50,7 @@ function createFakeRender({ apiKey = 'test-key', serviceId = 'srv-test', scenari
 
       if (req.headers.authorization !== `Bearer ${apiKey}`) return send(401, { message: 'Unauthorized' });
 
-      const deployMatch = req.url.match(/^\/v1\/services\/([^/]+)\/deploys(?:\/([^/]+))?$/);
+      const deployMatch = req.url.split('?')[0].match(/^\/v1\/services\/([^/]+)\/deploys(?:\/([^/]+))?$/);
       if (!deployMatch) return send(404, { message: 'Not Found' });
       if (deployMatch[1] !== serviceId) return send(404, { message: 'service not found' });
 
@@ -49,8 +61,23 @@ function createFakeRender({ apiKey = 'test-key', serviceId = 'srv-test', scenari
         }
         if (!body || typeof body.imageUrl !== 'string') return send(400, { message: 'imageUrl is required' });
         const id = `dep-${String(state.deploys.size + 1).padStart(3, '0')}`;
-        state.deploys.set(id, { imageUrl: body.imageUrl, step: 0 });
-        return send(201, { id, status: SCENARIOS[scenario][0], image: { ref: body.imageUrl } });
+        const deploy = { imageUrl: body.imageUrl, step: 0, createdAt: new Date().toISOString() };
+        state.deploys.set(id, deploy);
+        if (scenario === 'queued') return send(202); // "Queued": no body, as documented
+        return send(201, publicDeploy(id, deploy, SCENARIOS[scenario][0]));
+      }
+
+      if (req.method === 'GET' && !deployMatch[2]) {
+        state.lists += 1;
+        if (scenario === 'queued' && state.lists === 1) return send(200, []); // not visible yet
+        const ours = [...state.deploys.entries()].map(([id, deploy]) => ({ id, deploy }));
+        const old = state.deploys.size ? [...state.deploys.values()][0].imageUrl : `ghcr.io/o/r@sha256:${'0'.repeat(64)}`;
+        const items = [
+          ...ours.map(({ id, deploy }) => publicDeploy(id, deploy, SCENARIOS[scenario][Math.min(deploy.step, SCENARIOS[scenario].length - 1)])),
+          publicDeploy('dep-other', decoy('x', `ghcr.io/o/r@sha256:${'e'.repeat(64)}`, 1000), 'live'),
+          publicDeploy('dep-ancient', decoy('y', old, 24 * 3600 * 1000), 'live'),
+        ].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+        return send(200, items.map((deploy) => ({ deploy, cursor: `cur-${deploy.id}` })));
       }
 
       if (req.method === 'GET' && deployMatch[2]) {
