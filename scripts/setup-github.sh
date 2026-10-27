@@ -28,10 +28,18 @@ esac
 default_checks="CI OK,Lint,Unit tests (Node 18),Unit tests (Node 20),Unit tests (Node 22),Unit tests (Node 24),Integration tests,E2E tests (shard 1),E2E tests (shard 2),Mutation tests,Build image"
 required_checks="${REQUIRED_CHECKS:-$default_checks}"
 
-command -v gh >/dev/null 2>&1 || { echo "error: GitHub CLI (gh) is not installed" >&2; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo "error: jq is not installed" >&2; exit 1; }
+if [ "$dry_run" != true ]; then
+  command -v gh >/dev/null 2>&1 || { echo "error: GitHub CLI (gh) is not installed" >&2; exit 1; }
+fi
 
-repo="${GH_REPO:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}"
+if [ -n "${GH_REPO:-}" ]; then
+  repo="$GH_REPO"
+elif [ "$dry_run" = true ]; then
+  repo="__GH_OWNER__/tema18-tasks-api-ci"
+else
+  repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
+fi
 echo "Repository: ${repo}"
 [ "$dry_run" = true ] && echo "(dry run: nothing is changed)"
 

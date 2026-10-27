@@ -41,7 +41,8 @@ async function runSmoke({ baseUrl, fetchImpl = fetch, requestTimeoutMs = 10000, 
       await fn();
       results.push({ name, ok: true, ms: Date.now() - startedAt });
     } catch (error) {
-      results.push({ name, ok: false, ms: Date.now() - startedAt, detail: error.message });
+      const cause = error.cause && error.cause.code ? ` (${error.cause.code})` : '';
+      results.push({ name, ok: false, ms: Date.now() - startedAt, detail: `${error.message}${cause}` });
     }
   }
 
@@ -165,10 +166,13 @@ async function main(argv, env = process.env) {
 
 if (require.main === module) {
   main(process.argv.slice(2)).then(
-    (code) => process.exit(code),
+    (code) => {
+      // exitCode instead of exit(): exiting while undici closes sockets aborts libuv on Windows.
+      process.exitCode = code;
+    },
     (error) => {
       annotate.error(error.message);
-      process.exit(1);
+      process.exitCode = 1;
     },
   );
 }

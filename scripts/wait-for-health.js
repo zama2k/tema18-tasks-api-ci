@@ -94,10 +94,13 @@ async function main(argv, env = process.env) {
 
 if (require.main === module) {
   main(process.argv.slice(2)).then(
-    (code) => process.exit(code),
+    (code) => {
+      // exitCode instead of exit(): exiting while undici closes sockets aborts libuv on Windows.
+      process.exitCode = code;
+    },
     (error) => {
       annotate.error(error.message);
-      process.exit(1);
+      process.exitCode = 1;
     },
   );
 }
