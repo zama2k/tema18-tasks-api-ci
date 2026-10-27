@@ -1,0 +1,16 @@
+$ docker run --rm --entrypoint sh t18ej1-tasks-api:local -c 'echo node: $(node -v); echo user: $(id -un); echo prod packages in node_modules: $(ls node_modules | wc -l); echo dev tools present \(jest, eslint, playwright, stryker\): $(ls node_modules | grep -cE "^(jest|eslint|@playwright|@stryker-mutator)$"); echo top-level files:; ls /app; echo scripts:; ls /app/scripts'
+
+node: v24.12.0
+user: node
+prod packages in node_modules: 80
+dev tools present (jest, eslint, playwright, stryker): 0
+top-level files:
+node_modules
+package.json
+public
+scripts
+src
+scripts:
+healthcheck.js
+
+[exit code: 0]

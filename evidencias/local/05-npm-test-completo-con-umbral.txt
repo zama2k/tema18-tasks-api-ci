@@ -1,0 +1,57 @@
+$ npm test -- --ci
+
+
+> tema18-tasks-api-ci@1.0.0 test
+> jest --coverage --ci
+
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mutation.json', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+----------------------|---------|----------|---------|---------|-------------------
+File                  | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------------|---------|----------|---------|---------|-------------------
+All files             |     100 |    98.87 |   98.78 |     100 |                   
+ src                  |     100 |    95.65 |     100 |     100 |                   
+  app.js              |     100 |      100 |     100 |     100 |                   
+  bootstrap.js        |     100 |    93.75 |     100 |     100 | 7                 
+  config.js           |     100 |    94.44 |     100 |     100 | 6                 
+ src/controllers      |     100 |      100 |     100 |     100 |                   
+  tasks.controller.js |     100 |      100 |     100 |     100 |                   
+ src/db               |     100 |      100 |   83.33 |     100 |                   
+  migrate.js          |     100 |      100 |      75 |     100 |                   
+  pool.js             |     100 |      100 |     100 |     100 |                   
+ src/models           |     100 |      100 |     100 |     100 |                   
+  task.model.js       |     100 |      100 |     100 |     100 |                   
+ src/routes           |     100 |      100 |     100 |     100 |                   
+  tasks.js            |     100 |      100 |     100 |     100 |                   
+ src/utils            |     100 |      100 |     100 |     100 |                   
+  errors.js           |     100 |      100 |     100 |     100 |                   
+  logger.js           |     100 |      100 |     100 |     100 |                   
+  validators.js       |     100 |      100 |     100 |     100 |                   
+----------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 322/322 )
+Branches     : 98.87% ( 175/177 )
+Functions    : 98.78% ( 81/82 )
+Lines        : 100% ( 287/287 )
+================================================================================
+
+Test Suites: 22 passed, 22 total
+Tests:       316 passed, 316 total
+Snapshots:   0 total
+Time:        6.659 s
+Ran all test suites in 2 projects.
+
+[exit code: 0]

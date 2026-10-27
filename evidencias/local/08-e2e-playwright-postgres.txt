@@ -1,0 +1,23 @@
+$ echo DATABASE_URL set: postgres on a local container; E2E_PORT=3101; npx playwright test
+
+DATABASE_URL set: postgres on a local container
+
+Running 13 tests using 1 worker
+
+  ok  1 [chromium] › tests\e2e\tasks.e2e.test.js:17:3 › UI › shows the empty state on a clean database (500ms)
+  ok  2 [chromium] › tests\e2e\tasks.e2e.test.js:26:3 › UI › creates a task from the form and lists it with its priority (227ms)
+  ok  3 [chromium] › tests\e2e\tasks.e2e.test.js:42:3 › UI › shows the validation message returned by the API for an empty title (227ms)
+  ok  4 [chromium] › tests\e2e\tasks.e2e.test.js:51:3 › UI › completes a task and updates the statistics (229ms)
+  ok  5 [chromium] › tests\e2e\tasks.e2e.test.js:63:3 › UI › deletes a task (227ms)
+  ok  6 [chromium] › tests\e2e\tasks.e2e.test.js:74:3 › UI › filters the list by status (179ms)
+  ok  7 [chromium] › tests\e2e\tasks.e2e.test.js:86:3 › UI › renders user text as text, never as markup (177ms)
+  ok  8 [chromium] › tests\e2e\tasks.e2e.test.js:96:3 › UI › keeps the data after a page reload (244ms)
+  ok  9 [chromium] › tests\e2e\tasks.e2e.test.js:109:3 › API › GET /health reports the running build and the storage engine (14ms)
+  ok 10 [chromium] › tests\e2e\tasks.e2e.test.js:116:3 › API › serves the full CRUD lifecycle (16ms)
+  ok 11 [chromium] › tests\e2e\tasks.e2e.test.js:129:3 › API › answers 400 with details for invalid payloads and ids (6ms)
+  ok 12 [chromium] › tests\e2e\tasks.e2e.test.js:137:3 › API › computes statistics and sorting from stored data (13ms)
+  ok 13 [chromium] › tests\e2e\tasks.e2e.test.js:148:3 › API › sends security headers and hides the framework (13ms)
+
+  13 passed (4.0s)
+
+[exit code: 0]

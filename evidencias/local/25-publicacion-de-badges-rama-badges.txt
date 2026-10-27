@@ -1,0 +1,17 @@
+$ T=$(mktemp -d); git init -q --bare $T/origin.git; git clone -q $T/origin.git $T/work 2>/dev/null; cd $T/work; git config user.name demo; git config user.email demo@example.test; git config core.autocrlf false; echo main > README.md; git add .; git commit -qm init; git branch -M main; git push -q origin main; mkdir out; echo '{"schemaVersion":1,"label":"coverage","message":"100%","color":"brightgreen"}' > out/coverage.json; S=<repo>/scripts/publish-badges.sh; echo '### first run creates the orphan branch'; GITHUB_SHA=abcdef1234567 $S out; echo '### second run, nothing changed'; $S out; echo '### badge changes'; echo '{"schemaVersion":1,"label":"coverage","message":"95%","color":"brightgreen"}' > out/coverage.json; GITHUB_SHA=1234567abcdef $S out; echo '### history of the badges branch in the remote'; git -C $T/origin.git log badges --format='%h %s'; git -C $T/origin.git ls-tree -r --name-only badges; echo '### local branches and worktrees left behind'; git branch; git worktree list | wc -l
+
+### first run creates the orphan branch
+Badges published to origin/badges.
+### second run, nothing changed
+Badges are already up to date.
+### badge changes
+Badges published to origin/badges.
+### history of the badges branch in the remote
+01d0367 chore(badges): update from 1234567
+a38af4c chore(badges): update from abcdef1
+coverage.json
+### local branches and worktrees left behind
+* main
+1
+
+[exit code: 0]

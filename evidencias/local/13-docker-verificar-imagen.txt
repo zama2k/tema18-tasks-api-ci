@@ -1,0 +1,13 @@
+$ scripts/verify-image.sh t18ej1-tasks-api:local 1c743daeaf5f031eefde599de05663e63d05b24e 3101
+
+Starting t18ej1-tasks-api:local on port 3101
+Waiting for the container healthcheck
+GET /health -> {"status":"healthy","version":"1.0.0","commit":"1c743daeaf5f031eefde599de05663e63d05b24e","storage":"memory","uptime":5}
+Runs as uid 1000 (not root)
+Graceful shutdown OK (exit code 0)
+{"time":"2026-10-27T07:42:29.954Z","level":"info","message":"server listening","port":3000,"storage":"memory","commit":"1c743daeaf5f031eefde599de05663e63d05b24e"}
+{"time":"2026-10-27T07:42:35.706Z","level":"info","message":"shutdown started","signal":"SIGTERM"}
+{"time":"2026-10-27T07:42:35.707Z","level":"info","message":"shutdown complete"}
+Image verified.
+
+[exit code: 0]

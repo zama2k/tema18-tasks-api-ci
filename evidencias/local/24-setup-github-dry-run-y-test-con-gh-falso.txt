@@ -1,0 +1,24 @@
+$ echo '### dry run (gh is not installed here and nothing is sent to GitHub)'; RENDER_SERVICE_ID=srv-example STAGING_URL=https://tasks-staging.onrender.com RENDER_API_KEY=dummy-not-printed scripts/setup-github.sh --dry-run; echo "exit=$?"; echo; echo '### automated test with a fake gh that records every call'; npx jest --selectProjects unit --ci --testPathPatterns setup-github --verbose 2>&1 | grep -E '✓|✕|Tests:'
+
+### dry run (gh is not installed here and nothing is sent to GitHub)
+Repository: __GH_OWNER__/tema18-tasks-api-ci
+(dry run: nothing is changed)
+Protecting main (checks: CI OK,Lint,Unit tests (Node 18),Unit tests (Node 20),Unit tests (Node 22),Unit tests (Node 24),Integration tests,E2E tests (shard 1),E2E tests (shard 2),Mutation tests,Build image)
+[dry-run] gh api --method PUT repos/__GH_OWNER__/tema18-tasks-api-ci/branches/main/protection --input -
+  enforce_admins=false on purpose: with a single account the owner merges with admin bypass.
+Creating environment: staging
+[dry-run] gh api --method PUT repos/__GH_OWNER__/tema18-tasks-api-ci/environments/staging --input -
+[dry-run] gh api --method POST repos/__GH_OWNER__/tema18-tasks-api-ci/environments/staging/deployment-branch-policies --input -
+  deployment allowed only from: main
+[dry-run] upsert staging variable RENDER_SERVICE_ID
+[dry-run] upsert staging variable STAGING_URL
+[dry-run] set env secret RENDER_API_KEY
+  secret DISCORD_WEBHOOK_URL: PENDING (export DISCORD_WEBHOOK_URL and run this script again)
+  secret CODECOV_TOKEN: PENDING (export CODECOV_TOKEN and run this script again)
+Done. Review: https://github.com/__GH_OWNER__/tema18-tasks-api-ci/settings/branches and https://github.com/__GH_OWNER__/tema18-tasks-api-ci/settings/environments
+exit=0
+
+### automated test with a fake gh that records every call
+Tests:       7 passed, 7 total
+
+[exit code: 0]

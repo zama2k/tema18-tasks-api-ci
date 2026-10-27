@@ -1,0 +1,9 @@
+$ npm run build
+
+
+> tema18-tasks-api-ci@1.0.0 build
+> node scripts/build-check.js
+
+build check passed: sources compile, app can be created, assets present
+
+[exit code: 0]

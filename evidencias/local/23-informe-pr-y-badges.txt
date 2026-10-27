@@ -1,0 +1,39 @@
+$ node scripts/ci-report.js comment --unit coverage/coverage-summary.json --integration coverage-integration/coverage-summary.json --mutation reports/mutation/mutation.json --sha 1c743daeaf5f031eefde599de05663e63d05b24e --run-url https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/runs/1 --out /tmp/comment.md && echo '### Sticky PR comment (first line is the hidden marker)' && cat /tmp/comment.md && echo '### shields.io badge files' && node scripts/ci-report.js badges --unit coverage/coverage-summary.json --mutation reports/mutation/mutation.json --out-dir /tmp/badges-out && for f in /tmp/badges-out/*.json; do echo "$(basename $f): $(cat $f)"; done
+
+### Sticky PR comment (first line is the hidden marker)
+<!-- tasks-api-ci:coverage-report -->
+
+## Test report
+
+Commit `1c743da` | [workflow run](https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/runs/1)
+
+**Unit tests coverage (enforced by Jest `coverageThreshold`)**
+
+| Metric | Coverage | Covered | Gate (>= 80%) |
+|---|---:|---:|:---:|
+| statements | 100% | 322/322 | PASS |
+| branches | 97.74% | 173/177 | PASS |
+| functions | 98.78% | 81/82 | PASS |
+| lines | 100% | 287/287 | PASS |
+
+**Integration tests coverage (PostgreSQL, informational)**
+
+| Metric | Coverage | Covered |
+|---|---:|---:|
+| statements | 64.9% | 209/322 |
+| branches | 46.89% | 83/177 |
+| functions | 62.19% | 51/82 |
+| lines | 66.2% | 190/287 |
+
+**Mutation score (Stryker): 86.6%**
+
+| Killed | Timeout | Survived | No coverage | Valid mutants |
+|---:|---:|---:|---:|---:|
+| 522 | 19 | 84 | 0 | 625 |
+
+A surviving mutant is a code change that no test noticed. Break threshold: 50%.
+### shields.io badge files
+coverage.json: {"schemaVersion":1,"label":"coverage","message":"100%","color":"brightgreen"}
+mutation.json: {"schemaVersion":1,"label":"mutation score","message":"86.6%","color":"green"}
+
+[exit code: 0]

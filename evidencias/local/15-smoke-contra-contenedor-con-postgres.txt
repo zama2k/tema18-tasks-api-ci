@@ -1,0 +1,36 @@
+$ curl -s localhost:3101/health; echo; node scripts/smoke.js --url http://127.0.0.1:3101; echo "exit=$?"; echo; echo '--- tasks left behind (must be []) ---'; curl -s localhost:3101/api/tasks; echo; echo '--- same smoke run against a URL where nothing listens ---'; node scripts/smoke.js --url http://127.0.0.1:3109; echo "exit=$?"
+
+{"status":"healthy","version":"1.0.0","commit":"1c743daeaf5f031eefde599de05663e63d05b24e","storage":"postgres","uptime":46}
+PASS  GET /health reports healthy (22 ms)
+PASS  GET /ready reports ready (8 ms)
+PASS  GET / serves the UI (2 ms)
+PASS  GET /api/tasks returns a list (3 ms)
+PASS  POST /api/tasks creates a task (9 ms)
+PASS  GET /api/tasks/:id returns what was created (1 ms)
+PASS  PUT /api/tasks/:id updates the status (4 ms)
+PASS  GET /api/tasks/stats counts the task (1 ms)
+PASS  DELETE /api/tasks/:id removes the task (2 ms)
+PASS  GET a deleted task answers 404 (2 ms)
+PASS  unknown route answers a JSON 404 (1 ms)
+PASS  invalid id answers 400 (1 ms)
+exit=0
+
+--- tasks left behind (must be []) ---
+[]
+--- same smoke run against a URL where nothing listens ---
+FAIL  GET /health reports healthy (18 ms) - fetch failed
+FAIL  GET /ready reports ready (1 ms) - fetch failed
+FAIL  GET / serves the UI (1 ms) - fetch failed
+FAIL  GET /api/tasks returns a list (0 ms) - fetch failed
+FAIL  POST /api/tasks creates a task (2 ms) - fetch failed
+FAIL  GET /api/tasks/:id returns what was created (0 ms) - skipped: the task was not created
+FAIL  PUT /api/tasks/:id updates the status (0 ms) - skipped: the task was not created
+FAIL  GET /api/tasks/stats counts the task (0 ms) - fetch failed
+FAIL  DELETE /api/tasks/:id removes the task (0 ms) - skipped: the task was not created
+FAIL  GET a deleted task answers 404 (0 ms) - skipped: the task was not created
+FAIL  unknown route answers a JSON 404 (1 ms) - fetch failed
+FAIL  invalid id answers 400 (1 ms) - fetch failed
+::error::Smoke tests failed
+exit=1
+
+[exit code: 0]

@@ -1,0 +1,64 @@
+$ echo 'Added temporary file src/untested.js (60 untested functions); expecting a non-zero exit code'; npm run test:unit -- --ci --coverage
+
+Added temporary file src/untested.js (60 untested functions); expecting a non-zero exit code
+
+> tema18-tasks-api-ci@1.0.0 test:unit
+> jest --selectProjects unit --ci --coverage
+
+Running one project: unit
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mutation.json', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+----------------------|---------|----------|---------|---------|-------------------
+File                  | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------------|---------|----------|---------|---------|-------------------
+All files             |   57.29 |    58.24 |   57.04 |   54.45 |                   
+ src                  |   28.14 |     26.5 |   22.07 |   26.82 |                   
+  app.js              |     100 |      100 |     100 |     100 |                   
+  bootstrap.js        |     100 |    93.75 |     100 |     100 | 7                 
+  config.js           |     100 |    94.44 |     100 |     100 | 6                 
+  untested.js         |       0 |        0 |       0 |       0 | 3-421             
+ src/controllers      |     100 |      100 |     100 |     100 |                   
+  tasks.controller.js |     100 |      100 |     100 |     100 |                   
+ src/db               |     100 |    71.42 |   83.33 |     100 |                   
+  migrate.js          |     100 |    66.66 |      75 |     100 | 12                
+  pool.js             |     100 |      100 |     100 |     100 |                   
+ src/models           |     100 |      100 |     100 |     100 |                   
+  task.model.js       |     100 |      100 |     100 |     100 |                   
+ src/routes           |     100 |      100 |     100 |     100 |                   
+  tasks.js            |     100 |      100 |     100 |     100 |                   
+ src/utils            |     100 |      100 |     100 |     100 |                   
+  errors.js           |     100 |      100 |     100 |     100 |                   
+  logger.js           |     100 |      100 |     100 |     100 |                   
+  validators.js       |     100 |      100 |     100 |     100 |                   
+----------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 57.29% ( 322/562 )
+Branches     : 58.24% ( 173/297 )
+Functions    : 57.04% ( 81/142 )
+Lines        : 54.45% ( 287/527 )
+================================================================================
+Jest: Coverage for statements (57.29%) does not meet "global" threshold (80%)
+Jest: Coverage for branches (58.24%) does not meet "global" threshold (80%)
+Jest: Coverage for lines (54.45%) does not meet "global" threshold (80%)
+Jest: Coverage for functions (57.04%) does not meet "global" threshold (80%)
+
+Test Suites: 18 passed, 18 total
+Tests:       289 passed, 289 total
+Snapshots:   0 total
+Time:        7.068 s
+Ran all test suites.
+
+[exit code: 1]

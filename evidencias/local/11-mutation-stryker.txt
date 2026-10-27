@@ -1,0 +1,1064 @@
+$ npx stryker run --reporters clear-text,progress-append-only,html,json && echo && node scripts/ci-report.js mutation --mutation reports/mutation/mutation.json
+
+08:38:32 (68696) INFO ProjectReader Found 11 of 73 file(s) to be mutated.
+08:38:32 (68696) INFO Instrumenter Instrumented 11 source file(s) with 637 mutant(s)
+08:38:32 (68696) INFO ConcurrencyTokenProvider Creating 2 test runner process(es).
+08:38:32 (68696) INFO DryRunExecutor Starting initial test run (jest test runner with "perTest" coverage analysis). This may take a while.
+08:38:34 (68696) INFO DryRunExecutor Initial test run succeeded. Ran 194 tests in 1 second (net 349 ms, overhead 1029 ms).
+08:38:34 (68696) WARN MutantTestPlanner Detected 73 static mutants (11% of total) that are estimated to take 48% of the time running the tests!
+  You might want to enable "ignoreStatic" to ignore these static mutants for your next run. 
+  For more information about static mutants visit: https://stryker-mutator.io/docs/mutation-testing-elements/static-mutants
+  (disable "warnings.slow" to ignore this warning)
+Mutation testing 0% (elapsed: <1m, remaining: ~48m) 4/637 tested (2 survived, 0 timed out)
+Mutation testing 0% (elapsed: <1m, remaining: ~37m) 13/637 tested (4 survived, 2 timed out)
+Mutation testing 1% (elapsed: <1m, remaining: ~43m) 15/637 tested (5 survived, 3 timed out)
+Mutation testing 3% (elapsed: <1m, remaining: ~18m) 59/637 tested (8 survived, 5 timed out)
+Mutation testing 5% (elapsed: <1m, remaining: ~14m) 73/637 tested (10 survived, 5 timed out)
+Mutation testing 6% (elapsed: ~1m, remaining: ~14m) 78/637 tested (13 survived, 5 timed out)
+Mutation testing 10% (elapsed: ~1m, remaining: ~10m) 173/637 tested (26 survived, 7 timed out)
+Mutation testing 14% (elapsed: ~1m, remaining: ~7m) 207/637 tested (31 survived, 7 timed out)
+Mutation testing 14% (elapsed: ~1m, remaining: ~8m) 209/637 tested (31 survived, 9 timed out)
+Mutation testing 15% (elapsed: ~1m, remaining: ~9m) 210/637 tested (31 survived, 10 timed out)
+Mutation testing 15% (elapsed: ~1m, remaining: ~9m) 216/637 tested (32 survived, 12 timed out)
+Mutation testing 17% (elapsed: ~2m, remaining: ~9m) 225/637 tested (33 survived, 14 timed out)
+Mutation testing 18% (elapsed: ~2m, remaining: ~9m) 234/637 tested (35 survived, 15 timed out)
+Mutation testing 18% (elapsed: ~2m, remaining: ~10m) 240/637 tested (36 survived, 17 timed out)
+Mutation testing 23% (elapsed: ~2m, remaining: ~8m) 305/637 tested (47 survived, 18 timed out)
+Mutation testing 26% (elapsed: ~2m, remaining: ~7m) 376/637 tested (54 survived, 18 timed out)
+Mutation testing 34% (elapsed: ~2m, remaining: ~5m) 439/637 tested (61 survived, 18 timed out)
+Mutation testing 43% (elapsed: ~3m, remaining: ~3m) 499/637 tested (66 survived, 18 timed out)
+Mutation testing 51% (elapsed: ~3m, remaining: ~3m) 559/637 tested (74 survived, 18 timed out)
+Mutation testing 69% (elapsed: ~3m, remaining: ~1m) 591/637 tested (80 survived, 18 timed out)
+Mutation testing 92% (elapsed: ~3m, remaining: <1m) 625/637 tested (84 survived, 19 timed out)
+
+All tests
+  app.routes.test.js
+    ✓ createApp requires a repository [line 13] (killed 1)
+    ✓ operational endpoints GET /health reports status, version, commit and storage [line 19] (killed 3)
+    ~ operational endpoints does not advertise the framework [line 32] (covered 32)
+    ✓ operational endpoints GET /ready is 200 when the storage answers [line 38] (killed 1)
+    ✓ operational endpoints GET /ready is 503 without leaking the cause when the storage is down [line 44] (killed 5)
+    ✓ tasks API GET /api/tasks starts empty [line 65] (killed 13)
+    ✓ tasks API POST /api/tasks creates a task and returns 201 with Location [line 71] (killed 35)
+    ✓ tasks API POST /api/tasks answers 400 with field details for invalid data [line 80] (killed 21)
+    ✓ tasks API POST /api/tasks answers 400 for malformed JSON [line 88] (killed 8)
+    ✓ tasks API POST /api/tasks answers 400 when the body is missing entirely [line 95] (killed 7)
+    ✓ tasks API POST /api/tasks answers 413 for oversized payloads [line 100] (killed 8)
+    ✓ tasks API GET /api/tasks/:id returns one task [line 106] (killed 19)
+    ✓ tasks API GET /api/tasks/:id answers 404 for an unknown task [line 114] (killed 4)
+    ✓ tasks API GET /api/tasks/abc answers 400 [line 120] (killed 1)
+    ✓ tasks API GET /api/tasks/0 answers 400 [line 120] (killed 1)
+    ✓ tasks API GET /api/tasks/-3 answers 400 [line 120] (killed 1)
+    ✓ tasks API GET /api/tasks/1.5 answers 400 [line 120] (killed 1)
+    ~ tasks API GET /api/tasks/99999999999 answers 400 [line 120] (covered 62)
+    ✓ tasks API PUT /api/tasks/:id updates only the given fields [line 125] (killed 26)
+    ✓ tasks API PUT /api/tasks/:id answers 404 and 400 appropriately [line 133] (killed 9)
+    ✓ tasks API DELETE /api/tasks/:id answers 204 and then 404 [line 140] (killed 11)
+    ✓ tasks API filters by status and rejects invalid filters [line 148] (killed 10)
+    ✓ tasks API sorts by priority and rejects other sort keys [line 159] (killed 21)
+    ✓ tasks API GET /api/tasks/stats is not shadowed by the :id route [line 170] (killed 12)
+    ~ error handling unknown routes answer a JSON 404 [line 183] (covered 41)
+    ✓ error handling unexpected failures answer 500 without leaking internals [line 190] (killed 7)
+    ✓ static UI serves the single page app at / [line 206] (killed 3)
+  bootstrap.test.js
+    ✓ createRepository falls back to in-memory storage without DATABASE_URL [line 7] (killed 5)
+    ✓ createRepository uses PostgreSQL when DATABASE_URL is set, without migrating by default [line 15] (killed 5)
+    ✓ createRepository runs migrations on boot when AUTO_MIGRATE is enabled [line 30] (killed 4)
+    ✓ createRepository closes the pool and rethrows when a migration fails [line 42] (killed 1)
+    ✓ registerShutdown SIGTERM stops the server, closes the repository and exits with 0 [line 71] (killed 6)
+    ✓ registerShutdown is wired to SIGTERM and SIGINT [line 82] (killed 4)
+    ✓ registerShutdown a second signal while shutting down is ignored [line 93] (killed 2)
+    ✓ registerShutdown exits with 1 when closing the server fails [line 101] (killed 2)
+    ~ registerShutdown exits with 1 when the repository cannot be closed [line 110] (covered 22)
+    ✓ registerShutdown forces exit(1) when shutdown never completes [line 118] (killed 2)
+    ✓ start boots the app on the requested port with in-memory storage [line 132] (killed 7)
+    ~ start rejects when the port is already taken [line 154] (covered 41)
+  config.test.js
+    ✓ loadConfig uses safe defaults [line 4] (killed 27)
+    ✓ loadConfig reads values from the environment [line 14] (killed 6)
+    ~ loadConfig treats an empty DATABASE_URL as "not configured" [line 32] (covered 36)
+    ✓ loadConfig accepts port 0 (ephemeral port, used by tests) [line 36] (killed 1)
+    ✓ loadConfig rejects PORT=abc [line 40] (killed 6)
+    ✓ loadConfig rejects PORT=-1 [line 40] (killed 1)
+    ✓ loadConfig rejects PORT=70000 [line 40] (killed 1)
+    ~ loadConfig rejects PORT=80.5 [line 40] (covered 17)
+    ~ loadConfig AUTO_MIGRATE="false" stays disabled [line 44] (covered 35)
+    ~ loadConfig AUTO_MIGRATE="0" stays disabled [line 44] (covered 35)
+    ~ loadConfig AUTO_MIGRATE="" stays disabled [line 44] (covered 36)
+    ~ loadConfig AUTO_MIGRATE="no" stays disabled [line 44] (covered 35)
+  logger.test.js
+    ✓ createLogger writes one JSON object per call with time, level and message [line 11] (killed 11)
+    ✓ createLogger drops messages below the configured level [line 20] (killed 5)
+    ✓ createLogger silent mutes everything [line 28] (killed 1)
+    ~ createLogger falls back to info for an unknown level [line 34] (covered 18)
+    ✓ createLogger writes errors to stderr and the rest to stdout by default [line 41] (killed 3)
+    ✓ HttpError badRequest and notFound carry status and code [line 58] (killed 1)
+    ~ HttpError is a real Error with a stack [line 67] (covered 4)
+  memory.repository.test.js
+    ~ memory repository reports its storage engine [line 12] (covered 5)
+    ✓ memory repository create assigns incremental ids, defaults and timestamps [line 16] (killed 5)
+    ~ memory repository never reuses the id of a deleted task [line 33] (covered 26)
+    ~ memory repository get returns a copy, so callers cannot mutate the stored task [line 40] (covered 21)
+    ~ memory repository get returns null for an unknown id [line 47] (covered 7)
+    ~ memory repository list returns every task in creation order [line 51] (covered 17)
+    ~ memory repository update merges the patch, bumps updated_at and ignores unknown columns [line 57] (covered 28)
+    ~ memory repository update returns null for an unknown id [line 70] (covered 10)
+    ~ memory repository remove reports whether something was deleted [line 74] (covered 27)
+    ~ memory repository ping and close resolve [line 81] (covered 5)
+  migrate.test.js
+    ✓ migrate applies pending files in lexical order, each inside a transaction [line 34] (killed 17)
+    ✓ migrate skips versions that are already recorded [line 47] (killed 3)
+    ~ migrate is a no-op when everything is applied [line 53] (covered 20)
+    ✓ migrate rolls back, names the failing file and still releases the client and the lock [line 59] (killed 4)
+    ✓ migrate logs each applied migration [line 70] (killed 3)
+    ✓ migrate ships at least the initial schema migration [line 80] (killed 1)
+  pool.test.js
+    ✓ createPool applies safe defaults for connection handling [line 15] (killed 3)
+    ~ createPool lets callers override the defaults [line 26] (covered 3)
+    ✓ createPool logs idle client errors instead of crashing the process [line 32] (killed 6)
+  postgres.repository.test.js
+    ~ postgres repository (mocked pool) reports its storage engine [line 12] (covered 3)
+    ✓ postgres repository (mocked pool) list returns the rows ordered by id [line 16] (killed 2)
+    ✓ postgres repository (mocked pool) get binds the id as a parameter and returns null when missing [line 23] (killed 6)
+    ✓ postgres repository (mocked pool) create inserts with defaults filled in [line 31] (killed 8)
+    ✓ postgres repository (mocked pool) update only sets the provided columns and always touches updated_at [line 40] (killed 16)
+    ✓ postgres repository (mocked pool) update returns null when no row matched [line 51] (killed 3)
+    ✓ postgres repository (mocked pool) values are never interpolated into the SQL text [line 56] (killed 1)
+    ✓ postgres repository (mocked pool) remove maps rowCount to a boolean [line 67] (killed 5)
+    ✓ postgres repository (mocked pool) ping runs a trivial query and propagates failures [line 74] (killed 1)
+    ✓ postgres repository (mocked pool) close ends the pool [line 81] (killed 1)
+  scripts.deploy-checks.test.js
+    ✘ util backoffDelay doubles and is capped [line 29] (covered 0)
+    ✘ util parseArgs reads pairs and rejects dangling flags or positional values [line 33] (covered 0)
+    ✘ util redact hides every secret occurrence and ignores empty secrets [line 39] (covered 0)
+    ✘ util setOutput and appendSummary are no-ops outside GitHub Actions [line 43] (covered 0)
+    ✘ waitForHealth returns on the first healthy answer with the expected commit [line 52] (covered 0)
+    ✘ waitForHealth keeps retrying with growing delays while the service is cold (connection errors, 503) [line 61] (covered 0)
+    ✘ waitForHealth does not accept a healthy answer from the previous version [line 80] (covered 0)
+    ✘ waitForHealth without an expected commit any healthy answer is enough [line 90] (covered 0)
+    ✘ waitForHealth reports a non JSON placeholder page [line 99] (covered 0)
+    ✘ waitForHealth reports an unhealthy status [line 99] (covered 0)
+    ✘ waitForHealth reports an HTTP error [line 99] (covered 0)
+    ✘ waitForHealth reports request timeouts distinctly [line 105] (covered 0)
+    ✘ waitForHealth main skips with a notice when no URL is configured [line 112] (covered 0)
+    ✓ smoke tests against the real application every check passes and the created task is cleaned up [line 134] (killed 20)
+    ✓ smoke tests against the real application main prints one line per check, writes outputs and exits 0 [line 143] (killed 1)
+    ✘ smoke tests against the real application main skips with a notice when no URL is configured [line 157] (covered 0)
+    ~ smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up [line 169] (covered 222)
+    ✘ smoke tests against a broken deployment a placeholder page instead of the app fails the health and UI checks [line 190] (covered 0)
+    ✘ smoke tests against a broken deployment main returns 1 when something fails and renders the table [line 202] (covered 0)
+    ✘ smoke tests against a broken deployment renderSummary shows pass/fail counts and details [line 214] (covered 0)
+  tasks.controller.test.js
+    ✓ formatTask maps a database row to the public shape [line 22] (killed 2)
+    ~ formatTask does not leak unknown columns [line 44] (covered 4)
+    ✓ filterByStatus returns only the matching tasks [line 53] (killed 1)
+    ~ filterByStatus returns every task when no status is given [line 57] (covered 4)
+    ~ filterByStatus returns an empty list when nothing matches [line 61] (covered 9)
+    ~ sortByPriority orders high, medium, low [line 67] (covered 10)
+    ✓ sortByPriority breaks ties by creation date and then by id [line 76] (killed 2)
+    ~ sortByPriority does not mutate the input array [line 85] (covered 10)
+    ✓ calculateStats counts by status and priority and computes the completion rate [line 94] (killed 5)
+    ✓ calculateStats is all zeros for an empty list (no division by zero) [line 109] (killed 1)
+    ~ createTasksController handlers list rejects an unknown status filter before touching the repository [line 148] (covered 17)
+    ~ createTasksController handlers list rejects an unsupported sort key [line 158] (covered 22)
+    ~ createTasksController handlers list filters and sorts the formatted tasks [line 163] (covered 46)
+    ~ createTasksController handlers get answers 404 when the repository finds nothing [line 177] (covered 36)
+    ~ createTasksController handlers get answers 400 for an invalid id without querying storage [line 187] (covered 29)
+    ✓ createTasksController handlers create stores the sanitized payload and answers 201 with a Location header [line 196] (killed 3)
+    ~ createTasksController handlers create exposes every validation error in the details [line 213] (covered 98)
+    ~ createTasksController handlers update answers 404 when the task does not exist [line 221] (covered 103)
+    ~ createTasksController handlers remove answers 204 on success and 404 when nothing was deleted [line 230] (covered 37)
+  validators.test.js
+    ✓ validateTaskTitle accepts "Buy milk" [line 13] (killed 4)
+    ~ validateTaskTitle accepts "a" [line 13] (covered 18)
+    ✓ validateTaskTitle accepts "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" [line 13] (killed 1)
+    ~ validateTaskTitle accepts "  padded  " [line 13] (covered 18)
+    ✓ validateTaskTitle rejects empty string [line 26] (killed 1)
+    ✓ validateTaskTitle rejects only whitespace [line 26] (killed 1)
+    ✓ validateTaskTitle rejects too long [line 26] (killed 1)
+    ✓ validateTaskTitle rejects number [line 26] (killed 2)
+    ~ validateTaskTitle rejects null [line 26] (covered 13)
+    ~ validateTaskTitle rejects undefined [line 26] (covered 13)
+    ~ validateTaskTitle rejects object [line 26] (covered 13)
+    ✓ validateTaskTitle rejects only markup [line 26] (killed 3)
+    ✓ validateTaskPriority accepts low [line 32] (killed 1)
+    ~ validateTaskPriority accepts medium [line 32] (covered 1)
+    ~ validateTaskPriority accepts high [line 32] (covered 1)
+    ~ validateTaskPriority rejects "urgent" [line 36] (covered 1)
+    ~ validateTaskPriority rejects "HIGH" [line 36] (covered 1)
+    ~ validateTaskPriority rejects "" [line 36] (covered 1)
+    ~ validateTaskPriority rejects null [line 36] (covered 1)
+    ~ validateTaskPriority rejects undefined [line 36] (covered 1)
+    ~ validateTaskPriority rejects 1 [line 36] (covered 1)
+    ~ validateTaskStatus accepts pending [line 42] (covered 1)
+    ~ validateTaskStatus accepts in_progress [line 42] (covered 1)
+    ~ validateTaskStatus accepts done [line 42] (covered 1)
+    ~ validateTaskStatus rejects "finished" [line 46] (covered 1)
+    ~ validateTaskStatus rejects "DONE" [line 46] (covered 1)
+    ~ validateTaskStatus rejects "" [line 46] (covered 1)
+    ~ validateTaskStatus rejects null [line 46] (covered 1)
+    ~ validateTaskStatus rejects undefined [line 46] (covered 1)
+    ~ validateTaskStatus rejects false [line 46] (covered 1)
+    ~ sanitizeInput trims surrounding whitespace [line 52] (covered 8)
+    ~ sanitizeInput strips html tags but keeps their text [line 56] (covered 8)
+    ✓ sanitizeInput removes control characters but keeps regular unicode [line 60] (killed 1)
+    ~ sanitizeInput returns an empty string for non-string null [line 64] (covered 6)
+    ~ sanitizeInput returns an empty string for non-string undefined [line 64] (covered 6)
+    ~ sanitizeInput returns an empty string for non-string 12 [line 64] (covered 6)
+    ~ sanitizeInput returns an empty string for non-string {} [line 64] (covered 6)
+    ~ sanitizeInput returns an empty string for non-string [] [line 64] (covered 6)
+    ✓ parseId parses "1" as 1 [line 75] (killed 1)
+    ~ parseId parses "42" as 42 [line 75] (covered 21)
+    ✓ parseId parses 7 as 7 [line 75] (killed 3)
+    ✓ parseId parses "2147483647" as 2147483647 [line 75] (killed 1)
+    ✓ parseId rejects "0" [line 79] (killed 1)
+    ~ parseId rejects "-1" [line 79] (covered 17)
+    ~ parseId rejects "1.5" [line 79] (covered 17)
+    ~ parseId rejects "abc" [line 79] (covered 17)
+    ~ parseId rejects "" [line 79] (covered 17)
+    ~ parseId rejects "01" [line 79] (covered 17)
+    ✓ parseId rejects "2147483648" [line 79] (killed 1)
+    ~ parseId rejects null [line 79] (covered 11)
+    ~ parseId rejects undefined [line 79] (covered 11)
+    ~ parseId rejects {} [line 79] (covered 11)
+    ~ parseId rejects 1.5 [line 79] (covered 17)
+    ✓ validateTask (create) applies defaults and sanitizes the output [line 88] (killed 18)
+    ✓ validateTask (create) keeps explicit valid values [line 100] (killed 10)
+    ~ validateTask (create) ignores unknown properties [line 116] (covered 84)
+    ✓ validateTask (create) requires a title [line 123] (killed 4)
+    ✓ validateTask (create) reports every invalid field at once [line 129] (killed 10)
+    ✓ validateTask (create) rejects a non-object payload null [line 146] (killed 5)
+    ✓ validateTask (create) rejects a non-object payload undefined [line 146] (killed 1)
+    ~ validateTask (create) rejects a non-object payload "text" [line 146] (covered 23)
+    ~ validateTask (create) rejects a non-object payload 12 [line 146] (covered 23)
+    ~ validateTask (create) rejects a non-object payload [] [line 146] (covered 24)
+    ~ validateTask (create) rejects a non-object payload [{"title":"x"}] [line 146] (covered 24)
+    ~ validateTask (partial update) accepts a subset of fields and returns only those [line 157] (covered 62)
+    ✓ validateTask (partial update) rejects an update that changes nothing [line 163] (killed 2)
+    ~ validateTask (partial update) still validates the fields that are present [line 169] (covered 84)
+    ✓ validateTask (partial update) does not allow blanking the title [line 175] (killed 1)
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:63:47
+-     if (id === null) throw HttpError.badRequest('id must be a positive integer');
++     if (id === null) throw HttpError.badRequest("");
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up
+  and 6 more tests!
+
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:77:36
+-           throw HttpError.badRequest(`status must be one of: ${TASK_STATUSES.join(', ')}`);
++           throw HttpError.badRequest(``);
+Tests ran:
+    tasks API filters by status and rejects invalid filters
+    createTasksController handlers list rejects an unknown status filter before touching the repository
+
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:77:81
+-           throw HttpError.badRequest(`status must be one of: ${TASK_STATUSES.join(', ')}`);
++           throw HttpError.badRequest(`status must be one of: ${TASK_STATUSES.join("")}`);
+Tests ran:
+    tasks API filters by status and rejects invalid filters
+    createTasksController handlers list rejects an unknown status filter before touching the repository
+
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:80:36
+-           throw HttpError.badRequest('sort only supports the value: priority');
++           throw HttpError.badRequest("");
+Tests ran:
+    tasks API sorts by priority and rejects other sort keys
+    createTasksController handlers list rejects an unsupported sort key
+
+
+[Survived] ConditionalExpression
+src/controllers/tasks.controller.js:84:11
+-         if (sort === 'priority') tasks = sortByPriority(tasks);
++         if (true) tasks = sortByPriority(tasks);
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up
+  and 5 more tests!
+
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:94:43
+-         if (!task) throw HttpError.notFound('task not found');
++         if (!task) throw HttpError.notFound("");
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    tasks API GET /api/tasks/:id answers 404 for an unknown task
+  and 1 more test!
+
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:100:46
+-         if (!valid) throw HttpError.badRequest('invalid task', errors);
++         if (!valid) throw HttpError.badRequest("", errors);
+Tests ran:
+    tasks API POST /api/tasks answers 400 with field details for invalid data
+    tasks API POST /api/tasks answers 400 when the body is missing entirely
+    createTasksController handlers create exposes every validation error in the details
+
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:109:46
+-         if (!valid) throw HttpError.badRequest('invalid task', errors);
++         if (!valid) throw HttpError.badRequest("", errors);
+Tests ran:
+    tasks API PUT /api/tasks/:id answers 404 and 400 appropriately
+
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:112:43
+-         if (!task) throw HttpError.notFound('task not found');
++         if (!task) throw HttpError.notFound("");
+Tests ran:
+    tasks API PUT /api/tasks/:id answers 404 and 400 appropriately
+    createTasksController handlers update answers 404 when the task does not exist
+
+
+[Survived] StringLiteral
+src/controllers/tasks.controller.js:118:46
+-         if (!removed) throw HttpError.notFound('task not found');
++         if (!removed) throw HttpError.notFound("");
+Tests ran:
+    tasks API DELETE /api/tasks/:id answers 204 and then 404
+    createTasksController handlers remove answers 204 on success and 404 when nothing was deleted
+
+
+[Survived] MethodExpression
+src/db/migrate.js:13:17
+-     const files = (await fs.readdir(directory)).filter((name) => name.endsWith('.sql')).sort();
++     const files = (await fs.readdir(directory)).filter(name => name.endsWith('.sql'));
+Tests ran:
+    migrate applies pending files in lexical order, each inside a transaction
+    migrate skips versions that are already recorded
+    migrate is a no-op when everything is applied
+  and 2 more tests!
+
+
+[Survived] StringLiteral
+src/db/migrate.js:18:24
+-       await client.query('SELECT pg_advisory_lock($1)', [ADVISORY_LOCK_ID]);
++       await client.query("", [ADVISORY_LOCK_ID]);
+Tests ran:
+    migrate applies pending files in lexical order, each inside a transaction
+    migrate skips versions that are already recorded
+    migrate is a no-op when everything is applied
+  and 2 more tests!
+
+
+[Survived] ArrayDeclaration
+src/db/migrate.js:18:55
+-       await client.query('SELECT pg_advisory_lock($1)', [ADVISORY_LOCK_ID]);
++       await client.query('SELECT pg_advisory_lock($1)', []);
+Tests ran:
+    migrate applies pending files in lexical order, each inside a transaction
+    migrate skips versions that are already recorded
+    migrate is a no-op when everything is applied
+  and 2 more tests!
+
+
+[Survived] StringLiteral
+src/db/migrate.js:20:7
+-         `CREATE TABLE IF NOT EXISTS schema_migrations (
+-            version    text PRIMARY KEY,
+-            applied_at timestamptz NOT NULL DEFAULT now()
+-          )`,
++         ``,
+Tests ran:
+    migrate applies pending files in lexical order, each inside a transaction
+    migrate skips versions that are already recorded
+    migrate is a no-op when everything is applied
+  and 2 more tests!
+
+
+[Survived] StringLiteral
+src/db/migrate.js:31:65
+-         const sql = await fs.readFile(path.join(directory, file), 'utf8');
++         const sql = await fs.readFile(path.join(directory, file), "");
+Tests ran:
+    migrate applies pending files in lexical order, each inside a transaction
+    migrate skips versions that are already recorded
+    migrate rolls back, names the failing file and still releases the client and the lock
+  and 1 more test!
+
+
+[Survived] StringLiteral
+src/db/migrate.js:36:28
+-           await client.query('INSERT INTO schema_migrations (version) VALUES ($1)', [file]);
++           await client.query("", [file]);
+Tests ran:
+    migrate applies pending files in lexical order, each inside a transaction
+    migrate skips versions that are already recorded
+    migrate rolls back, names the failing file and still releases the client and the lock
+  and 1 more test!
+
+
+[Survived] ArrayDeclaration
+src/db/migrate.js:36:83
+-           await client.query('INSERT INTO schema_migrations (version) VALUES ($1)', [file]);
++           await client.query('INSERT INTO schema_migrations (version) VALUES ($1)', []);
+Tests ran:
+    migrate applies pending files in lexical order, each inside a transaction
+    migrate skips versions that are already recorded
+    migrate rolls back, names the failing file and still releases the client and the lock
+  and 1 more test!
+
+
+[Survived] ObjectLiteral
+src/db/migrate.js:40:71
+-           throw new Error(`migration ${file} failed: ${error.message}`, { cause: error });
++           throw new Error(`migration ${file} failed: ${error.message}`, {});
+Tests ran:
+    migrate rolls back, names the failing file and still releases the client and the lock
+
+
+[Survived] ArrayDeclaration
+src/db/migrate.js:47:57
+-       await client.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]).catch(() => {});
++       await client.query('SELECT pg_advisory_unlock($1)', []).catch(() => {});
+Tests ran:
+    migrate applies pending files in lexical order, each inside a transaction
+    migrate skips versions that are already recorded
+    migrate is a no-op when everything is applied
+  and 2 more tests!
+
+
+[Survived] ConditionalExpression
+src/models/task.model.js:32:38
+-         const task = tasks.find((t) => t.id === id);
++         const task = tasks.find((t) => true);
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    tasks API GET /api/tasks/:id returns one task
+  and 1 more test!
+
+
+[Survived] ConditionalExpression
+src/models/task.model.js:52:38
+-         const task = tasks.find((t) => t.id === id);
++         const task = tasks.find((t) => true);
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    tasks API PUT /api/tasks/:id updates only the given fields
+  and 1 more test!
+
+
+[Survived] ArrowFunction
+src/models/task.model.js:63:28
+-         tasks = tasks.filter((t) => t.id !== id);
++         tasks = tasks.filter(() => undefined);
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    tasks API DELETE /api/tasks/:id answers 204 and then 404
+  and 2 more tests!
+
+
+[Survived] ConditionalExpression
+src/models/task.model.js:63:35
+-         tasks = tasks.filter((t) => t.id !== id);
++         tasks = tasks.filter((t) => false);
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    tasks API DELETE /api/tasks/:id answers 204 and then 404
+  and 2 more tests!
+
+
+[Survived] StringLiteral
+src/models/task.model.js:89:9
+-           `INSERT INTO tasks (title, description, status, priority)
+-            VALUES ($1, $2, $3, $4)
+-            RETURNING *`,
++           ``,
+Tests ran:
+    postgres repository (mocked pool) create inserts with defaults filled in
+
+
+[Survived] StringLiteral
+src/models/task.model.js:112:45
+-         const { rowCount } = await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
++         const { rowCount } = await pool.query("", [id]);
+Tests ran:
+    postgres repository (mocked pool) remove maps rowCount to a boolean
+
+
+[Survived] ArrayDeclaration
+src/models/task.model.js:112:80
+-         const { rowCount } = await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
++         const { rowCount } = await pool.query('DELETE FROM tasks WHERE id = $1', []);
+Tests ran:
+    postgres repository (mocked pool) remove maps rowCount to a boolean
+
+
+[Survived] StringLiteral
+src/models/task.model.js:117:24
+-         await pool.query('SELECT 1');
++         await pool.query("");
+Tests ran:
+    postgres repository (mocked pool) ping runs a trivial query and propagates failures
+
+
+[Survived] StringLiteral
+src/models/task.model.js:16:37
+-   const UPDATABLE_COLUMNS = ['title', 'description', 'status', 'priority'];
++   const UPDATABLE_COLUMNS = ['title', "", 'status', 'priority'];
+Ran all tests for this mutant.
+
+[Survived] StringLiteral
+src/routes/tasks.js:8:14
+-     router.get('/', controller.list);
++     router.get("", controller.list);
+Ran all tests for this mutant.
+
+[Survived] StringLiteral
+src/routes/tasks.js:9:15
+-     router.post('/', controller.create);
++     router.post("", controller.create);
+Ran all tests for this mutant.
+
+[Survived] StringLiteral
+src/utils/errors.js:5:17
+-       this.name = 'HttpError';
++       this.name = "";
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up
+  and 22 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/logger.js:4:33
+-   function createLogger({ level = process.env.LOG_LEVEL || 'info', stream } = {}) {
++   function createLogger({ level = true, stream } = {}) {
+Tests ran:
+    createApp requires a repository
+
+
+[Survived] ConditionalExpression
+src/utils/logger.js:4:33
+-   function createLogger({ level = process.env.LOG_LEVEL || 'info', stream } = {}) {
++   function createLogger({ level = false, stream } = {}) {
+Tests ran:
+    createApp requires a repository
+
+
+[Survived] LogicalOperator
+src/utils/logger.js:4:33
+-   function createLogger({ level = process.env.LOG_LEVEL || 'info', stream } = {}) {
++   function createLogger({ level = process.env.LOG_LEVEL && 'info', stream } = {}) {
+Tests ran:
+    createApp requires a repository
+
+
+[Survived] StringLiteral
+src/utils/logger.js:4:58
+-   function createLogger({ level = process.env.LOG_LEVEL || 'info', stream } = {}) {
++   function createLogger({ level = process.env.LOG_LEVEL || "", stream } = {}) {
+Tests ran:
+    createApp requires a repository
+
+
+[Survived] EqualityOperator
+src/utils/logger.js:9:28
+-       const out = stream || (name === 'error' ? process.stderr : process.stdout);
++       const out = stream || (name !== 'error' ? process.stderr : process.stdout);
+Tests ran:
+    createLogger writes errors to stderr and the rest to stdout by default
+
+
+[Survived] ArrowFunction
+src/utils/logger.js:16:12
+-       debug: (message, fields) => write('debug', message, fields),
++       debug: () => undefined,
+Ran all tests for this mutant.
+
+[Survived] ConditionalExpression
+src/utils/validators.js:37:16
+-     const text = typeof raw === 'number' ? String(raw) : raw;
++     const text = true ? String(raw) : raw;
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up
+  and 29 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/validators.js:38:7
+-     if (typeof text !== 'string' || !/^[1-9]\d{0,9}$/.test(text)) return null;
++     if (false || !/^[1-9]\d{0,9}$/.test(text)) return null;
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up
+  and 29 more tests!
+
+
+[Survived] StringLiteral
+src/utils/validators.js:55:63
+-       return { valid: false, errors: [{ field: 'body', message: 'body must be a JSON object' }] };
++       return { valid: false, errors: [{ field: 'body', message: "" }] };
+Tests ran:
+    tasks API POST /api/tasks answers 400 when the body is missing entirely
+    validateTask (create) rejects a non-object payload null
+    validateTask (create) rejects a non-object payload undefined
+  and 4 more tests!
+
+
+[Survived] StringLiteral
+src/utils/validators.js:68:22
+-           message: has('title')
++           message: has("")
+Tests ran:
+    tasks API POST /api/tasks answers 400 with field details for invalid data
+    createTasksController handlers create exposes every validation error in the details
+    validateTask (create) requires a title
+  and 2 more tests!
+
+
+[Survived] StringLiteral
+src/utils/validators.js:69:13
+-             ? `title must be a text of 1 to ${TITLE_MAX_LENGTH} characters`
++             ? ``
+Tests ran:
+    tasks API POST /api/tasks answers 400 with field details for invalid data
+    validateTask (create) reports every invalid field at once
+    validateTask (partial update) does not allow blanking the title
+
+
+[Survived] ConditionalExpression
+src/utils/validators.js:77:9
+-       if (typeof payload.description === 'string' && description.length <= DESCRIPTION_MAX_LENGTH) {
++       if (true && description.length <= DESCRIPTION_MAX_LENGTH) {
+Tests ran:
+    validateTask (create) keeps explicit valid values
+    validateTask (create) reports every invalid field at once
+
+
+[Survived] EqualityOperator
+src/utils/validators.js:77:52
+-       if (typeof payload.description === 'string' && description.length <= DESCRIPTION_MAX_LENGTH) {
++       if (typeof payload.description === 'string' && description.length < DESCRIPTION_MAX_LENGTH) {
+Tests ran:
+    validateTask (create) keeps explicit valid values
+    validateTask (create) reports every invalid field at once
+
+
+[Survived] StringLiteral
+src/utils/validators.js:82:18
+-           message: `description must be a text of up to ${DESCRIPTION_MAX_LENGTH} characters`,
++           message: ``,
+Tests ran:
+    validateTask (create) reports every invalid field at once
+
+
+[Survived] StringLiteral
+src/utils/validators.js:93:49
+-         errors.push({ field: 'priority', message: `priority must be one of: ${TASK_PRIORITIES.join(', ')}` });
++         errors.push({ field: 'priority', message: `` });
+Tests ran:
+    tasks API POST /api/tasks answers 400 with field details for invalid data
+    createTasksController handlers create exposes every validation error in the details
+    validateTask (create) reports every invalid field at once
+  and 1 more test!
+
+
+[Survived] StringLiteral
+src/utils/validators.js:93:98
+-         errors.push({ field: 'priority', message: `priority must be one of: ${TASK_PRIORITIES.join(', ')}` });
++         errors.push({ field: 'priority', message: `priority must be one of: ${TASK_PRIORITIES.join("")}` });
+Tests ran:
+    tasks API POST /api/tasks answers 400 with field details for invalid data
+    createTasksController handlers create exposes every validation error in the details
+    validateTask (create) reports every invalid field at once
+  and 1 more test!
+
+
+[Survived] StringLiteral
+src/utils/validators.js:103:47
+-         errors.push({ field: 'status', message: `status must be one of: ${TASK_STATUSES.join(', ')}` });
++         errors.push({ field: 'status', message: `` });
+Tests ran:
+    tasks API PUT /api/tasks/:id answers 404 and 400 appropriately
+    validateTask (create) reports every invalid field at once
+
+
+[Survived] StringLiteral
+src/utils/validators.js:103:92
+-         errors.push({ field: 'status', message: `status must be one of: ${TASK_STATUSES.join(', ')}` });
++         errors.push({ field: 'status', message: `status must be one of: ${TASK_STATUSES.join("")}` });
+Tests ran:
+    tasks API PUT /api/tasks/:id answers 404 and 400 appropriately
+    validateTask (create) reports every invalid field at once
+
+
+[Survived] LogicalOperator
+src/utils/validators.js:109:7
+-     if (partial && errors.length === 0 && Object.keys(value).length === 0) {
++     if (partial || errors.length === 0 && Object.keys(value).length === 0) {
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up
+  and 21 more tests!
+
+
+[Survived] ConditionalExpression
+src/utils/validators.js:109:18
+-     if (partial && errors.length === 0 && Object.keys(value).length === 0) {
++     if (partial && true && Object.keys(value).length === 0) {
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    tasks API PUT /api/tasks/:id updates only the given fields
+  and 6 more tests!
+
+
+[Survived] StringLiteral
+src/utils/validators.js:110:26
+-       errors.push({ field: 'body', message: 'provide at least one field to update' });
++       errors.push({ field: "", message: 'provide at least one field to update' });
+Tests ran:
+    tasks API PUT /api/tasks/:id answers 404 and 400 appropriately
+    validateTask (partial update) rejects an update that changes nothing
+
+
+[Survived] StringLiteral
+src/app.js:22:40
+-     if (!repository) throw new TypeError('createApp requires a repository');
++     if (!repository) throw new TypeError("");
+Tests ran:
+    createApp requires a repository
+
+
+[Survived] StringLiteral
+src/app.js:18:12
+-     commit = 'unknown',
++     commit = "",
+Tests ran:
+    smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up
+    createApp requires a repository
+    error handling unexpected failures answer 500 without leaking internals
+
+
+[Survived] StringLiteral
+src/app.js:52:20
+-         logger.error('readiness check failed', { error: error.message });
++         logger.error("", { error: error.message });
+Tests ran:
+    operational endpoints GET /ready is 503 without leaking the cause when the storage is down
+
+
+[Survived] ObjectLiteral
+src/app.js:52:46
+-         logger.error('readiness check failed', { error: error.message });
++         logger.error('readiness check failed', {});
+Tests ran:
+    operational endpoints GET /ready is 503 without leaking the cause when the storage is down
+
+
+[Survived] StringLiteral
+src/app.js:61:29
+-       next(HttpError.notFound(`route not found: ${req.method} ${req.path}`));
++       next(HttpError.notFound(``));
+Tests ran:
+    smoke tests against the real application every check passes and the created task is cleaned up
+    smoke tests against the real application main prints one line per check, writes outputs and exits 0
+    smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up
+  and 1 more test!
+
+
+[Survived] StringLiteral
+src/app.js:76:32
+-           .json({ error: { code: 'bad_request', message: 'request body is not valid JSON' } });
++           .json({ error: { code: "", message: 'request body is not valid JSON' } });
+Tests ran:
+    tasks API POST /api/tasks answers 400 for malformed JSON
+
+
+[Survived] StringLiteral
+src/app.js:81:62
+-           .json({ error: { code: 'payload_too_large', message: 'request body is too large' } });
++           .json({ error: { code: 'payload_too_large', message: "" } });
+Tests ran:
+    tasks API POST /api/tasks answers 413 for oversized payloads
+
+
+[Survived] StringLiteral
+src/app.js:17:13
+-     version = '0.0.0',
++     version = "",
+Ran all tests for this mutant.
+
+[Survived] StringLiteral
+src/app.js:25:15
+-     app.disable('x-powered-by');
++     app.disable("");
+Ran all tests for this mutant.
+
+[Survived] ObjectLiteral
+src/app.js:28:12
+-       helmet({
+-         contentSecurityPolicy: {
+-           // Plain HTTP is used in local development and in the CI smoke tests.
+-           directives: { 'upgrade-insecure-requests': null },
+-         },
+-       }),
++       helmet({}),
+Ran all tests for this mutant.
+
+[Survived] ObjectLiteral
+src/app.js:29:30
+-         contentSecurityPolicy: {
+-           // Plain HTTP is used in local development and in the CI smoke tests.
+-           directives: { 'upgrade-insecure-requests': null },
+-         },
++         contentSecurityPolicy: {},
+Ran all tests for this mutant.
+
+[Survived] ObjectLiteral
+src/app.js:31:21
+-           directives: { 'upgrade-insecure-requests': null },
++           directives: {},
+Ran all tests for this mutant.
+
+[Survived] ObjectLiteral
+src/app.js:35:24
+-     app.use(express.json({ limit: '100kb' }));
++     app.use(express.json({}));
+Ran all tests for this mutant.
+
+[Survived] StringLiteral
+src/bootstrap.js:9:17
+-       logger.info('DATABASE_URL not set: using in-memory storage');
++       logger.info("");
+Tests ran:
+    createRepository falls back to in-memory storage without DATABASE_URL
+    start boots the app on the requested port with in-memory storage
+    start rejects when the port is already taken
+
+
+[Survived] StringLiteral
+src/bootstrap.js:49:17
+-       logger.info('shutdown started', { signal });
++       logger.info("", { signal });
+Tests ran:
+    registerShutdown SIGTERM stops the server, closes the repository and exits with 0
+    registerShutdown is wired to SIGTERM and SIGINT
+    registerShutdown a second signal while shutting down is ignored
+  and 3 more tests!
+
+
+[Survived] ObjectLiteral
+src/bootstrap.js:49:37
+-       logger.info('shutdown started', { signal });
++       logger.info('shutdown started', {});
+Tests ran:
+    registerShutdown SIGTERM stops the server, closes the repository and exits with 0
+    registerShutdown is wired to SIGTERM and SIGINT
+    registerShutdown a second signal while shutting down is ignored
+  and 3 more tests!
+
+
+[Survived] StringLiteral
+src/bootstrap.js:52:20
+-         logger.error('shutdown timed out, forcing exit', { timeoutMs });
++         logger.error("", { timeoutMs });
+Tests ran:
+    registerShutdown forces exit(1) when shutdown never completes
+
+
+[Survived] ObjectLiteral
+src/bootstrap.js:52:56
+-         logger.error('shutdown timed out, forcing exit', { timeoutMs });
++         logger.error('shutdown timed out, forcing exit', {});
+Tests ran:
+    registerShutdown forces exit(1) when shutdown never completes
+
+
+[Survived] CallExpression
+src/bootstrap.js:55:5
+-       deadline.unref();
++       ;
+Tests ran:
+    registerShutdown SIGTERM stops the server, closes the repository and exits with 0
+    registerShutdown is wired to SIGTERM and SIGINT
+    registerShutdown a second signal while shutting down is ignored
+  and 3 more tests!
+
+
+[Survived] OptionalChaining
+src/bootstrap.js:60:9
+-           server.closeIdleConnections?.();
++           server.closeIdleConnections();
+Tests ran:
+    registerShutdown SIGTERM stops the server, closes the repository and exits with 0
+    registerShutdown is wired to SIGTERM and SIGINT
+    registerShutdown a second signal while shutting down is ignored
+  and 3 more tests!
+
+
+[Survived] CallExpression
+src/bootstrap.js:63:7
+-         clearTimeout(deadline);
++         ;
+Tests ran:
+    registerShutdown SIGTERM stops the server, closes the repository and exits with 0
+    registerShutdown is wired to SIGTERM and SIGINT
+    registerShutdown a second signal while shutting down is ignored
+
+
+[Survived] StringLiteral
+src/bootstrap.js:64:19
+-         logger.info('shutdown complete');
++         logger.info("");
+Tests ran:
+    registerShutdown SIGTERM stops the server, closes the repository and exits with 0
+    registerShutdown is wired to SIGTERM and SIGINT
+    registerShutdown a second signal while shutting down is ignored
+
+
+[Survived] CallExpression
+src/bootstrap.js:67:7
+-         clearTimeout(deadline);
++         ;
+Tests ran:
+    registerShutdown exits with 1 when closing the server fails
+    registerShutdown exits with 1 when the repository cannot be closed
+
+
+[Survived] StringLiteral
+src/bootstrap.js:68:20
+-         logger.error('shutdown failed', { error: error.message });
++         logger.error("", { error: error.message });
+Tests ran:
+    registerShutdown exits with 1 when closing the server fails
+    registerShutdown exits with 1 when the repository cannot be closed
+
+
+[Survived] ObjectLiteral
+src/bootstrap.js:68:39
+-         logger.error('shutdown failed', { error: error.message });
++         logger.error('shutdown failed', {});
+Tests ran:
+    registerShutdown exits with 1 when closing the server fails
+    registerShutdown exits with 1 when the repository cannot be closed
+
+
+[Survived] StringLiteral
+src/bootstrap.js:81:15
+-     logger.info('server listening', {
++     logger.info("", {
+Tests ran:
+    start boots the app on the requested port with in-memory storage
+
+
+[Survived] ObjectLiteral
+src/bootstrap.js:81:35
+-     logger.info('server listening', {
+-       port: server.address().port,
+-       storage: repository.storage,
+-       commit: config.commit,
+-     });
++     logger.info('server listening', {});
+Tests ran:
+    start boots the app on the requested port with in-memory storage
+
+
+[Survived] ObjectLiteral
+src/bootstrap.js:86:20
+-     registerShutdown({ server, repository, logger });
++     registerShutdown({});
+Tests ran:
+    start boots the app on the requested port with in-memory storage
+
+
+[Survived] ConditionalExpression
+src/config.js:7:45
+-     const rawPort = env.PORT === undefined || env.PORT === '' ? '3000' : env.PORT;
++     const rawPort = env.PORT === undefined || false ? '3000' : env.PORT;
+Tests ran:
+    loadConfig reads values from the environment
+    loadConfig accepts port 0 (ephemeral port, used by tests)
+    loadConfig rejects PORT=abc
+  and 3 more tests!
+
+
+[Survived] StringLiteral
+src/config.js:7:58
+-     const rawPort = env.PORT === undefined || env.PORT === '' ? '3000' : env.PORT;
++     const rawPort = env.PORT === undefined || env.PORT === "Stryker was here!" ? '3000' : env.PORT;
+Tests ran:
+    loadConfig reads values from the environment
+    loadConfig accepts port 0 (ephemeral port, used by tests)
+    loadConfig rejects PORT=abc
+  and 3 more tests!
+
+
+[Survived] EqualityOperator
+src/config.js:9:46
+-     if (!Number.isInteger(port) || port < 0 || port > 65535) {
++     if (!Number.isInteger(port) || port < 0 || port >= 65535) {
+Tests ran:
+    loadConfig uses safe defaults
+    loadConfig reads values from the environment
+    loadConfig treats an empty DATABASE_URL as "not configured"
+  and 6 more tests!
+
+
+[Survived] StringLiteral
+src/config.js:16:61
+-       autoMigrate: TRUE_VALUES.has(String(env.AUTO_MIGRATE || '').toLowerCase()),
++       autoMigrate: TRUE_VALUES.has(String(env.AUTO_MIGRATE || "Stryker was here!").toLowerCase()),
+Tests ran:
+    loadConfig uses safe defaults
+    loadConfig treats an empty DATABASE_URL as "not configured"
+    loadConfig accepts port 0 (ephemeral port, used by tests)
+  and 1 more test!
+
+
+Ran 15.08 tests per mutant on average.
+----------------------|------------------|----------|-----------|------------|----------|----------|
+                      | % Mutation score |          |           |            |          |          |
+File                  |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+----------------------|--------|---------|----------|-----------|------------|----------|----------|
+All files             |  86.56 |   86.56 |      522 |        19 |         84 |        0 |       12 |
+ controllers          |  90.48 |   90.48 |       84 |        11 |         10 |        0 |        3 |
+  tasks.controller.js |  90.48 |   90.48 |       84 |        11 |         10 |        0 |        3 |
+ db                   |  80.43 |   80.43 |       37 |         0 |          9 |        0 |        0 |
+  migrate.js          |  75.68 |   75.68 |       28 |         0 |          9 |        0 |        0 |
+  pool.js             | 100.00 |  100.00 |        9 |         0 |          0 |        0 |        0 |
+ models               |  90.72 |   90.72 |       88 |         0 |          9 |        0 |        2 |
+  task.model.js       |  90.72 |   90.72 |       88 |         0 |          9 |        0 |        2 |
+ routes               |  66.67 |   66.67 |        4 |         0 |          2 |        0 |        2 |
+  tasks.js            |  66.67 |   66.67 |        4 |         0 |          2 |        0 |        2 |
+ utils                |  89.67 |   89.67 |      191 |         0 |         22 |        0 |        1 |
+  errors.js           |  87.50 |   87.50 |        7 |         0 |          1 |        0 |        0 |
+  logger.js           |  78.57 |   78.57 |       22 |         0 |          6 |        0 |        1 |
+  validators.js       |  91.53 |   91.53 |      162 |         0 |         15 |        0 |        0 |
+ app.js               |  78.33 |   78.33 |       41 |         6 |         13 |        0 |        4 |
+ bootstrap.js         |  71.15 |   71.15 |       35 |         2 |         15 |        0 |        0 |
+ config.js            |  91.30 |   91.30 |       42 |         0 |          4 |        0 |        0 |
+----------------------|--------|---------|----------|-----------|------------|----------|----------|
+08:42:07 (68696) INFO MutationTestReportHelper Final mutation score of 86.56 is greater than or equal to break threshold 50
+08:42:07 (68696) INFO JsonReporter Your report can be found at: <repo>/reports/mutation/mutation.json
+08:42:07 (68696) INFO HtmlReporter Your report can be found at: <repo>/reports/mutation/mutation.html
+08:42:07 (68696) INFO MutationTestExecutor Done in 3 minutes and 35 seconds.
+
+**Mutation score: 86.6%** (522 killed, 19 timeout, 84 survived, 0 without coverage, 625 valid mutants)
+
+[exit code: 0]

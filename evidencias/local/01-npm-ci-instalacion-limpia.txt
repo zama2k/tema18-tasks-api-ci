@@ -1,0 +1,25 @@
+$ node -v && npm -v && npm ci --no-audit --no-fund && npm ls --depth=0
+
+v24.12.0
+11.6.2
+npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+
+added 657 packages in 10s
+tema18-tasks-api-ci@1.0.0 <repo>
++-- @babel/core@7.29.7
++-- @emnapi/core@1.10.0
++-- @emnapi/runtime@1.10.0
++-- @eslint/js@10.0.1
++-- @playwright/test@1.64.1
++-- @stryker-mutator/core@10.1.1
++-- @stryker-mutator/jest-runner@10.1.1
++-- eslint@10.13.0
++-- express@5.3.0
++-- globals@17.13.0
++-- helmet@8.3.0
++-- jest@30.5.2
++-- pg@8.23.1
+`-- supertest@7.3.1
+
+
+[exit code: 0]

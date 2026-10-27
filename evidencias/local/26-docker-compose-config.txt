@@ -1,0 +1,45 @@
+$ DB_PORT=55432 docker compose -p t18ej1 config --services && docker compose -p t18ej1 --profile app config | head -40
+
+db
+name: t18ej1
+services:
+  app:
+    profiles:
+      - app
+    build:
+      context: <repo>
+      dockerfile: Dockerfile
+      args:
+        GIT_SHA: local
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    environment:
+      AUTO_MIGRATE: "true"
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/tasks
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3000"
+        protocol: tcp
+  db:
+    environment:
+      POSTGRES_DB: tasks
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d tasks
+      timeout: 3s
+      interval: 5s
+      retries: 10
+    image: postgres:16-alpine
+    networks:
+      default: null
+    ports:
+
+[exit code: 0]

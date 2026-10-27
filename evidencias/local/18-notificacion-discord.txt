@@ -1,0 +1,54 @@
+$ echo '### no secret configured'; env -u DISCORD_WEBHOOK_URL node scripts/notify-discord.js --status success --sha 1c743daeaf5f031eefde599de05663e63d05b24e; echo "exit=$?"; echo '### secret is not a Discord URL: nothing is sent'; DISCORD_WEBHOOK_URL=https://example.invalid/hook node scripts/notify-discord.js --status success --sha 1c743daeaf5f031eefde599de05663e63d05b24e; echo "exit=$?"; echo '### payload that would be posted (success)'; node -e "console.log(JSON.stringify(require('./scripts/notify-discord').buildPayload({status:'success',sha:'1c743daeaf5f031eefde599de05663e63d05b24e',url:'https://tasks-staging.onrender.com',runUrl:'https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/runs/1',digest:'sha256:'+'a'.repeat(64),deploySeconds:'83',actor:'__GH_OWNER__'}),null,2))"
+
+### no secret configured
+::notice::DISCORD_WEBHOOK_URL is not configured: skipping the Discord notification.
+exit=0
+### secret is not a Discord URL: nothing is sent
+::warning::DISCORD_WEBHOOK_URL does not look like a Discord webhook URL: notification skipped.
+exit=0
+### payload that would be posted (success)
+{
+  "username": "Tasks API CI",
+  "embeds": [
+    {
+      "title": "Staging deploy succeeded",
+      "url": "https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/runs/1",
+      "color": 3066993,
+      "fields": [
+        {
+          "name": "Commit",
+          "value": "`1c743da`",
+          "inline": true
+        },
+        {
+          "name": "Author",
+          "value": "__GH_OWNER__",
+          "inline": true
+        },
+        {
+          "name": "Deploy time",
+          "value": "83s",
+          "inline": true
+        },
+        {
+          "name": "Staging",
+          "value": "https://tasks-staging.onrender.com",
+          "inline": false
+        },
+        {
+          "name": "Image digest",
+          "value": "`sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`",
+          "inline": false
+        },
+        {
+          "name": "Workflow run",
+          "value": "[Open the run](https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/runs/1)",
+          "inline": false
+        }
+      ],
+      "timestamp": "2026-10-27T07:43:39.789Z"
+    }
+  ]
+}
+
+[exit code: 0]

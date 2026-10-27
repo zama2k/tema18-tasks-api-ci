@@ -1,0 +1,96 @@
+$ echo 'Forced failing test (temporary); retries=1 only when CI is set, so CI=1 here'; CI=1 npx playwright test zz-forced-failure; echo; echo '--- files kept in test-results/ ---'; find test-results -type f | sort
+
+Forced failing test (temporary); retries=1 only when CI is set, so CI=1 here
+
+Running 1 test using 1 worker
+
+  x  1 [chromium] › tests\e2e\zz-forced-failure.e2e.test.js:2:1 › TEMPORARY forced failure to prove artifacts are kept (1.7s)
+  x  2 [chromium] › tests\e2e\zz-forced-failure.e2e.test.js:2:1 › TEMPORARY forced failure to prove artifacts are kept (retry #1) (1.7s)
+
+
+  1) [chromium] › tests\e2e\zz-forced-failure.e2e.test.js:2:1 › TEMPORARY forced failure to prove artifacts are kept 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: 'This heading does not exist' })
+    Expected: visible
+    Timeout: 1500ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: 'This heading does not exist' }) with timeout 1500ms
+      - waiting for getByRole('heading', { name: 'This heading does not exist' })
+
+
+      2 | test('TEMPORARY forced failure to prove artifacts are kept', async ({ page }) => {
+      3 |   await page.goto('/');
+    > 4 |   await expect(page.getByRole('heading', { name: 'This heading does not exist' })).toBeVisible({ timeout: 1500 });
+        |                                                                                    ^
+      5 | });
+      6 |
+        at <repo>\tests\e2e\zz-forced-failure.e2e.test.js:4:84
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: 'This heading does not exist' })
+    Expected: visible
+    Timeout: 1500ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: 'This heading does not exist' }) with timeout 1500ms
+      - waiting for getByRole('heading', { name: 'This heading does not exist' })
+
+
+      2 | test('TEMPORARY forced failure to prove artifacts are kept', async ({ page }) => {
+      3 |   await page.goto('/');
+    > 4 |   await expect(page.getByRole('heading', { name: 'This heading does not exist' })).toBeVisible({ timeout: 1500 });
+        |                                                                                    ^
+      5 | });
+      6 |
+        at <repo>\tests\e2e\zz-forced-failure.e2e.test.js:4:84
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests\e2e\zz-forced-failure.e2e.test.js:2:1 › TEMPORARY forced failure to prove artifacts are kept 
+
+--- files kept in test-results/ ---
+test-results/.last-run.json
+test-results/zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1/error-context.md
+test-results/zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1/test-failed-1.png
+test-results/zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1/trace.zip
+test-results/zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium-retry1/video.webm
+test-results/zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium/error-context.md
+test-results/zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium/test-failed-1.png
+test-results/zz-forced-failure.e2e-TEMP-bf45c-to-prove-artifacts-are-kept-chromium/video.webm
+
+[exit code: 0]

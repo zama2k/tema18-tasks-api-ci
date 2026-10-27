@@ -1,0 +1,21 @@
+$ docker ps --filter name=t18ej1-db --format 'postgres: {{.Image}} {{.Status}}' && npm run db:migrate && npm run test:integration -- --ci
+
+postgres: postgres:16-alpine Up 31 minutes (healthy)
+
+> tema18-tasks-api-ci@1.0.0 db:migrate
+> node src/db/cli.js
+
+{"time":"2026-10-27T07:36:42.273Z","level":"info","message":"migrations finished","applied":0}
+
+> tema18-tasks-api-ci@1.0.0 test:integration
+> jest --selectProjects integration --ci
+
+Running one project: integration
+
+Test Suites: 4 passed, 4 total
+Tests:       27 passed, 27 total
+Snapshots:   0 total
+Time:        2.24 s, estimated 3 s
+Ran all test suites.
+
+[exit code: 0]

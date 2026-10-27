@@ -1,0 +1,10 @@
+$ docker run --rm koalaman/shellcheck:stable --version | head -2 && docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable scripts/*.sh && echo 'shellcheck: no problems found in:' && ls scripts/*.sh
+
+ShellCheck - shell script analysis tool
+version: 0.11.0
+shellcheck: no problems found in:
+scripts/publish-badges.sh
+scripts/setup-github.sh
+scripts/verify-image.sh
+
+[exit code: 0]

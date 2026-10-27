@@ -1,0 +1,45 @@
+$ docker build --no-cache --progress=plain -t t18ej1-tasks-api:local --build-arg GIT_SHA=1c743daeaf5f031eefde599de05663e63d05b24e . 2>&1 | tail -40 && docker image inspect t18ej1-tasks-api:local --format 'size_bytes={{.Size}} user={{.Config.User}} healthcheck={{.Config.Healthcheck.Test}} cmd={{.Config.Cmd}}'
+
+
+#10 [deps 4/4] RUN --mount=type=cache,target=/root/.npm     npm ci --omit=dev --ignore-scripts
+#10 1.185 
+#10 1.185 added 80 packages, and audited 81 packages in 832ms
+#10 1.185 
+#10 1.185 30 packages are looking for funding
+#10 1.185   run `npm fund` for details
+#10 1.186 
+#10 1.186 found 0 vulnerabilities
+#10 1.187 npm notice
+#10 1.187 npm notice New minor version of npm available! 11.6.2 -> 11.21.1
+#10 1.187 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.1
+#10 1.187 npm notice To update run: npm install -g npm@11.21.1
+#10 1.187 npm notice
+#10 DONE 1.2s
+
+#11 [runtime 3/7] COPY --from=deps --chown=node:node /app/node_modules ./node_modules
+#11 DONE 0.1s
+
+#12 [runtime 4/7] COPY --chown=node:node package.json ./
+#12 DONE 0.0s
+
+#13 [runtime 5/7] COPY --chown=node:node src ./src
+#13 DONE 0.0s
+
+#14 [runtime 6/7] COPY --chown=node:node public ./public
+#14 DONE 0.0s
+
+#15 [runtime 7/7] COPY --chown=node:node scripts/healthcheck.js ./scripts/healthcheck.js
+#15 DONE 0.0s
+
+#16 exporting to image
+#16 exporting layers 0.1s done
+#16 exporting manifest sha256:8a0d3dc9ff722de3d46230dff036676f19331fe42b695e0efebc180f884143fb 0.0s done
+#16 exporting config sha256:44b131df6fb66673ced6f844ecbb592c988a5f11940e6a11857f47eb31a05702 0.0s done
+#16 exporting attestation manifest sha256:d5660c3d8c8a5ba7d3370458e1c1c851d6894daa671e08d8d24e5a83bb32d1fc 0.0s done
+#16 exporting manifest list sha256:8b5dab76a84e5a066333cf89fd3d8c793edae6103f56e0e008b0bdd98a1d3576 0.0s done
+#16 naming to docker.io/library/t18ej1-tasks-api:local done
+#16 unpacking to docker.io/library/t18ej1-tasks-api:local 0.1s done
+#16 DONE 0.4s
+size_bytes=232539954 user=node healthcheck=[CMD node scripts/healthcheck.js] cmd=[node src/server.js]
+
+[exit code: 0]
