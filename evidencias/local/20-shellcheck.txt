@@ -1,8 +1,16 @@
-$ docker run --rm koalaman/shellcheck:stable --version | head -2 && docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable scripts/*.sh && echo 'shellcheck: no problems found in:' && ls scripts/*.sh
+$ echo '### CI uses the pinned image koalaman/shellcheck:v0.11.0'; docker run --rm koalaman/shellcheck:v0.11.0 --version | head -2; docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 scripts/*.sh; echo "v0.11.0 exit=$?"; echo; echo '### ubuntu-latest ships 0.9.0: the scripts must pass there too'; docker run --rm koalaman/shellcheck:v0.9.0 --version | head -2; docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.9.0 scripts/*.sh; echo "v0.9.0 exit=$?"; echo; echo 'files checked:'; ls scripts/*.sh
 
+### CI uses the pinned image koalaman/shellcheck:v0.11.0
 ShellCheck - shell script analysis tool
 version: 0.11.0
-shellcheck: no problems found in:
+v0.11.0 exit=0
+
+### ubuntu-latest ships 0.9.0: the scripts must pass there too
+ShellCheck - shell script analysis tool
+version: 0.9.0
+v0.9.0 exit=0
+
+files checked:
 scripts/publish-badges.sh
 scripts/setup-github.sh
 scripts/verify-image.sh

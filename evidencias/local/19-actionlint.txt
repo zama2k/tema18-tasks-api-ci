@@ -1,8 +1,6 @@
-$ docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -version && docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color && echo 'actionlint: no problems found in' && ls .github/workflows .github/actions/setup-project
+$ docker run --rm rhysd/actionlint:1.7.12 -version | head -1 && docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color && echo 'actionlint: no problems found in' && ls .github/workflows .github/actions/setup-project
 
 1.7.12
-installed by building from source
-built with go1.26.1 compiler for linux/amd64
 actionlint: no problems found in
 .github/actions/setup-project:
 action.yml

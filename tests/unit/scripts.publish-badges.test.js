@@ -5,6 +5,11 @@ const { execFileSync } = require('node:child_process');
 
 const SCRIPT = path.join(__dirname, '../../scripts/publish-badges.sh');
 
+// MSYS_NO_PATHCONV=1 (often exported to make `docker -v` work in Git Bash) stops Git Bash from
+// translating /tmp paths for the native git.exe, which breaks the script on Windows only.
+// eslint-disable-next-line no-unused-vars
+const { MSYS_NO_PATHCONV: _ignored, ...CLEAN_ENV } = process.env;
+
 const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 
 function hasBashAndGit() {
@@ -28,7 +33,7 @@ jest.setTimeout(30000);
   let badges;
 
   const publish = (sha) =>
-    execFileSync('bash', [SCRIPT, badges], { cwd: work, encoding: 'utf8', env: { ...process.env, GITHUB_SHA: sha } });
+    execFileSync('bash', [SCRIPT, badges], { cwd: work, encoding: 'utf8', env: { ...CLEAN_ENV, GITHUB_SHA: sha } });
 
   beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'badges-'));
