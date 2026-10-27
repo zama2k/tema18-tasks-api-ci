@@ -6,7 +6,7 @@
 ![Mutation score](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2F__GH_OWNER__%2Ftema18-tasks-api-ci%2Fbadges%2Fmutation.json)
 ![Node](https://img.shields.io/badge/node-18%20%7C%2020%20%7C%2022%20%7C%2024-339933)
 
-API REST de tareas (Node.js 24, Express 5, PostgreSQL) cuyo objetivo real es el **pipeline**: ningún código llega a staging sin pasar lint, tests unitarios con umbral de cobertura del 80 %, tests de integración contra PostgreSQL real, E2E con navegador y mutation testing. El mismo artefacto (una imagen Docker identificada por su *digest*) es el que se prueba, se publica y se despliega.
+API REST de tareas (Node.js 24, Express 5, PostgreSQL) cuyo objetivo real es el **pipeline**: ningún código llega a staging sin pasar lint, tests unitarios con umbral de cobertura del 80 %, tests de integración contra PostgreSQL real, E2E con navegador y mutation testing. La imagen Docker que se despliega se identifica por su *digest* y es la que se verifica justo después de publicarla.
 
 ## Nota para la corrección
 
@@ -44,7 +44,7 @@ Los marcadores `__GH_OWNER__` (badges y URLs) se sustituirán por el usuario de 
  |                      |   solo push a main                                     |
  |                      v                                                        |
  |        Publish image -> ghcr.io/<owner>/<repo>@sha256:...  (+ artefacto       |
- |                          image-digest con el commit)                          |
+ |                          image-digest con el commit; se verifica el digest)   |
  |  PR: comentario de cobertura + mutación | main: badges | CI OK (check único)  |
  +-------------------------------------------------------------------------------+
                                       | workflow_run (success, push, main)
@@ -108,11 +108,11 @@ Errores siempre JSON `{error:{code,message,details?}}`; un 500 nunca expone el m
 
 ### `ci.yml` (nombre `CI`)
 
-Se ejecuta en `push` a `main`/`develop`, `pull_request` a `main` y manualmente. Los PRs cancelan la ejecución anterior; los pushes a `main`/`develop` no.
+Se ejecuta en `push` a `main`/`develop`, `pull_request` a `main` y manualmente. Concurrencia: un PR cancela su ejecución anterior; push y ejecuciones manuales usan un grupo **por commit**, así que ninguna ejecución de otro commit las cancela (con un grupo compartido GitHub cancelaría la ejecución *pendiente*, y ese commit se quedaría sin CI ni imagen).
 
 | Job (nombre del check) | Hace | Notas |
 |---|---|---|
-| `Lint` | ESLint, `actionlint` (imagen fijada), `shellcheck` | |
+| `Lint` | ESLint, `actionlint` 1.7.12 y `shellcheck` v0.11.0, ambos como imagen Docker fijada | El `shellcheck` de `ubuntu-latest` cambia con la imagen del runner (0.9.0 hoy), por eso no se usa; los scripts pasan también con 0.9.0 |
 | `Unit tests (Node 18/20/22/24)` | `jest --selectProjects unit --coverage` | `fail-fast: false`; falla si cobertura < 80 %; artefacto `coverage-unit-node-<versión>` |
 | `Integration tests` | Service `postgres:16-alpine` con *healthcheck*; `db:migrate`; tests | Cobertura informativa (`coverage-integration`) |
 | `E2E tests (shard 1/2)` | Playwright en 2 *shards*, cada uno con su PostgreSQL | Caché de navegadores; artefactos `blob-report-N` y, solo si falla, `e2e-failures-shard-N` (capturas, vídeo, *trace*) |
@@ -120,7 +120,7 @@ Se ejecuta en `push` a `main`/`develop`, `pull_request` a `main` y manualmente. 
 | `Mutation tests` | Stryker; umbral `break` 50 % | Bloquea en PR; en push solo avisa (`::warning::`). Artefacto `mutation-report` |
 | `Coverage report` (solo PR) | Comentario **pegajoso**: se localiza por un marcador HTML oculto y se actualiza, no se duplica | Cobertura + mutación. Codecov solo si existe `CODECOV_TOKEN`. En PRs de forks va al *summary* |
 | `Build image` | `npm run build`, `docker build`, y [`verify-image.sh`](scripts/verify-image.sh) | Healthy, `commit` correcto, no root, parada con SIGTERM = código 0 |
-| `Publish image` (solo push a `main`) | Publica en GHCR `sha-<sha completo>` y `main`, **verifica el digest publicado** y sube el artefacto `image-digest` | `packages: write` solo aquí |
+| `Publish image` (solo push a `main`) | Publica en GHCR `sha-<sha completo>` y `main`, **verifica el digest publicado** y sube el artefacto `image-digest` | `packages: write` solo aquí. Reconstruye con la misma caché de capas que `Build image` (no reutiliza el binario del job anterior); lo que se despliega es lo que se verifica *después* de publicar |
 | `Publish coverage badges` (solo push a `main`) | Escribe JSON de shields.io en la rama `badges` | `contents: write` solo aquí |
 | `CI OK` | Agrega todos los jobs; falla si alguno falló o se canceló | Check requerido estable |
 
@@ -130,12 +130,13 @@ Se ejecuta en `push` a `main`/`develop`, `pull_request` a `main` y manualmente. 
 
 Se dispara con `workflow_run` del CI en `main`, solo si `conclusion == success` y el evento fue un `push`. **Todo usa `workflow_run.head_sha`**, nunca el HEAD actual de `main`.
 
-1. **Deploy to staging** (`environment: staging`): descarga `image-digest` del run del CI, [`resolve-image.js`](scripts/resolve-image.js) aborta si el commit del artefacto no es `head_sha`, y [`render-deploy.js`](scripts/render-deploy.js) pide a Render desplegar ese digest y sondea hasta `live` (fallo, cancelación o *timeout* = job rojo).
+0. **Superseded**: si `head_sha` ya no es la punta de `main` (otro commit se fusionó mientras este run esperaba), el run se salta con `::notice::` para que un run viejo que llega tarde no pise un despliegue más nuevo ([`check-superseded.js`](scripts/check-superseded.js); si la API de GitHub falla, avisa y despliega).
+1. **Deploy to staging** (`environment: staging`): descarga `image-digest` del run del CI, [`resolve-image.js`](scripts/resolve-image.js) aborta si el commit del artefacto no es `head_sha`, y [`render-deploy.js`](scripts/render-deploy.js) pide a Render desplegar ese digest y sondea hasta `live` (fallo, cancelación o *timeout* = job rojo). Si Render contesta `202 Queued` sin cuerpo, localiza el despliegue entre los 20 más recientes por el digest de la imagen y la hora de creación (nunca `limit=1`) y lo sondea igual.
 2. **Health check**: [`wait-for-health.js`](scripts/wait-for-health.js) reintenta con *backoff* exponencial (3 s a 30 s, 20 intentos) y exige que `/health.commit == head_sha`. Con el plan gratuito de Render el arranque en frío tarda en torno a un minuto, y esta comprobación evita dar por bueno el servicio anterior.
 3. **Smoke tests**: [`smoke.js`](scripts/smoke.js) ejecuta 12 comprobaciones contra la URL real y borra siempre lo que crea.
 4. **Notify**: embed de Discord (estado, SHA corto, URL, digest, enlace al run) en éxito, fallo u omitido; además un resumen del run con URL, SHA, digest y tiempos.
 
-`concurrency: deploy-staging` con `cancel-in-progress: false`: un despliegue en curso nunca se aborta; los siguientes esperan.
+`concurrency: deploy-staging` con `cancel-in-progress: false`: un despliegue en curso nunca se aborta. GitHub conserva **un solo run pendiente** por grupo: si se acumulan varios merges, solo espera el último y los intermedios se cancelan (no se pierde nada, porque el último despliega la punta de `main`).
 
 Si falta un secreto, el paso correspondiente se **salta con `::notice::`** (Render, Discord, Codecov) y nunca falla en silencio ni imprime valores.
 
@@ -145,15 +146,15 @@ Cifras de la ejecución local (ver evidencias; las de Actions se añadirán al p
 
 | Qué | Resultado |
 |---|---|
-| Tests unitarios | 289 (18 ficheros), 6,6 s |
+| Tests unitarios | 317 (20 ficheros), 6,5 s |
 | Cobertura de los unitarios | sentencias 100 %, ramas 97,74 %, funciones 98,78 %, líneas 100 % (umbral: 80 % en las cuatro) |
 | Tests de integración (PostgreSQL 16) | 27 en 4 ficheros |
-| `npm test` completo | 316 tests; ramas 98,87 % |
+| `npm test` completo | 344 tests; ramas 98,87 % |
 | E2E Playwright | 13 tests (8 UI + 5 API); dos shards de 7 y 6 |
 | Mutación (Stryker) | **86,56 %**: 522 muertos, 19 *timeout*, 84 supervivientes, 0 sin cobertura (625 mutantes válidos) |
 | Matriz Node 18/20/22/24 | unitarios en verde en contenedores Linux limpios (`npm ci` incluido) |
 | Imagen Docker | 232 MB, usuario `node`, 80 paquetes de producción y ninguna herramienta de desarrollo |
-| `actionlint` 1.7.12 / `shellcheck` 0.11.0 | sin avisos |
+| `actionlint` 1.7.12 / `shellcheck` 0.11.0 y 0.9.0 | sin avisos (la evidencia indica la versión usada) |
 
 El umbral **falla de verdad**: añadir un módulo sin tests baja la cobertura al 54-58 % y Jest sale con código 1 ([evidencia](evidencias/local/06-umbral-cobertura-falla-de-verdad.txt)). Con la clave del enunciado (`coverageThresholds`, en plural) Jest solo emite un *warning* y sale con 0 ([evidencia](evidencias/local/07-errata-coverageThresholds-plural-no-falla.txt)).
 
@@ -181,7 +182,7 @@ Resumen; el razonamiento completo está en [`docs/decisiones.md`](docs/decisione
 
 | Decisión | Por qué |
 |---|---|
-| Construir una vez, desplegar por digest | Lo que pasó los tests y la verificación es *exactamente* lo que corre en staging |
+| Probar la imagen y desplegarla por digest | Se verifica el digest que está en el registro y es ese mismo digest el que se despliega; el CD no reconstruye nada |
 | `workflow_run` con `head_sha` y comprobación del artefacto | Evita desplegar un commit distinto del validado |
 | `/health.commit` forzado en el health check | Un 200 puede venir de la versión anterior |
 | Caché de `node_modules` con clave exacta | `restore-keys` sobre `node_modules` + saltarse `npm ci` restauraría dependencias de otro lockfile |
@@ -194,7 +195,9 @@ Resumen; el razonamiento completo está en [`docs/decisiones.md`](docs/decisione
 ## Limitaciones honestas
 
 - **No se ha ejecutado ningún workflow en GitHub Actions.** Se validan sintácticamente con actionlint y cada paso lógico se ha ejecutado en local (scripts, contenedor, E2E, etc.), pero la integración entre acciones (`actions/cache`, `download-artifact` entre runs, `type=gha`, `strategy.job-total`) solo se confirmará en el primer run.
-- **Render y Discord no se han probado contra servicios reales.** El cliente de Render sigue la documentación oficial consultada el 2026-10-27, y se prueba contra un servidor falso; un cambio de la API o una restricción del plan no se detectaría hasta el primer despliegue. Si Render responde `202` sin cuerpo, el script falla con un mensaje explícito en lugar de suponer éxito.
+- **Render y Discord no se han probado contra servicios reales.** El cliente de Render sigue la documentación oficial consultada el 2026-10-27, y se prueba contra un servidor falso; un cambio de la API o una restricción del plan no se detectaría hasta el primer despliegue. El tratamiento del `202 Queued` (buscar el despliegue en el listado) se prueba solo contra el servidor falso, cuyo formato de listado sigue la documentación.
+- **`Publish image` reconstruye la imagen** (misma caché de capas, mismo `Dockerfile` y contexto) en lugar de reutilizar la del job `Build image`: no es un «build once» literal. La mitigación es probar el digest ya publicado antes de que el CD lo vea; reutilizar el binario exigiría pasar un `docker save` entre jobs y se descartó por complejidad.
+- **Un run pendiente del CD puede cancelarse** (comportamiento de GitHub). Es inocuo porque el último run despliega la punta de `main`, y el control de *superseded* evita lo contrario; si la API de GitHub no responde, ese control avisa y deja desplegar.
 - **Sin rollback automático.** Un despliegue fallido deja el job en rojo y avisa por Discord; volver atrás implica relanzar el despliegue de un digest anterior (los digests de cada commit de `main` quedan en GHCR y en el artefacto de cada run).
 - **Solo staging.** No hay producción en este ejercicio; el entorno `production` con revisor obligatorio pertenece al ejercicio de CD.
 - **Las versiones recientes de las acciones** (`checkout` v7, `cache` v6, etc.) se han fijado por SHA tras comprobar su `action.yml`, pero no pude ejecutarlas; Dependabot propondrá actualizaciones.

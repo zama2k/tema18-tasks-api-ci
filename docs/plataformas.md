@@ -6,6 +6,7 @@ Documentación consultada el **2026-10-27**. Si una API cambia, el primer sitio 
 
 Fuentes:
 
+- List deploys: <https://api-docs.render.com/reference/list-deploys>
 - Trigger Deploy: <https://api-docs.render.com/reference/create-deploy>
 - Retrieve Deploy: <https://api-docs.render.com/reference/retrieve-deploy>
 
@@ -14,6 +15,7 @@ Fuentes:
 | Autenticación | `Authorization: Bearer <API key>` |
 | Lanzar despliegue | `POST https://api.render.com/v1/services/{serviceId}/deploys`, cuerpo `{"imageUrl": "<imagen>"}` → `201` con el objeto *deploy* (`id`, `status`, `image`, …). También `202` (sin esquema documentado) |
 | Consultar | `GET https://api.render.com/v1/services/{serviceId}/deploys/{deployId}` |
+| Listar | `GET https://api.render.com/v1/services/{serviceId}/deploys?limit=20` (`limit` 1-100, por defecto 20; también `createdAfter`, `status`, `cursor`) → array de `{deploy, cursor}`; `deploy.image` trae `ref` y `sha`, y `deploy.createdAt` la fecha |
 | Estados | `created`, `queued`, `build_in_progress`, `update_in_progress`, `pre_deploy_in_progress`, `live`, `deactivated`, `build_failed`, `update_failed`, `pre_deploy_failed`, `canceled` |
 | Restricción de `imageUrl` | Para servicios basados en imagen; «host, repository and image name must match» la imagen configurada en el servicio. No se puede combinar con `commitId`, `buildId` ni `deployMode: deploy_only` |
 | Errores | `400, 401, 404, 406, 409, 410, 429, 500, 503` con `{id, message}`; el `429` trae `Retry-After` |
@@ -22,7 +24,7 @@ Cómo lo usa el script ([`render-deploy.js`](../scripts/render-deploy.js)):
 
 - Éxito = `live`. Fallo = `build_failed`, `update_failed`, `pre_deploy_failed`, `canceled` o `deactivated` (reemplazado por un despliegue más nuevo). Un estado desconocido también es error, para no sondear eternamente.
 - Reintenta el `POST` solo ante `429`/`503` (un despliegue duplicado de la misma imagen sería inofensivo, pero no hace falta), y tolera hasta 5 fallos consecutivos de red/5xx al sondear.
-- Un `202` sin `id` se trata como error explícito.
+- Ante un `202 Queued` (sin cuerpo según la documentación) lista los 20 despliegues más recientes y elige el más nuevo cuya imagen coincide con el digest pedido (normalizando `sha256:` y mayúsculas, mirando `image.sha` e `image.ref`) y cuya `createdAt` es posterior a la petición menos 2 minutos de tolerancia de reloj; reintenta hasta 8 veces cada 5 s y nunca usa `limit=1`. Si no aparece, falla con un mensaje explícito. Un fallo al listar nunca vuelve a lanzar el `POST`.
 - La clave de API nunca se imprime: se elimina de cualquier mensaje.
 
 ### Preparar el servicio en Render
@@ -71,4 +73,4 @@ El script valida que la URL sea `https://discord.com/api/webhooks/<id>/<token>` 
 | docker/metadata-action | v6.2.0 | `dc802804100637a589fabce1cb79ff13a1411302` |
 | codecov/codecov-action | v7.1.1 | `303a32d7a59b442fa8d48b6a1cc6825c09c847a5` |
 
-Cada SHA se obtuvo con `git ls-remote --tags` (etiqueta *peeled* `^{}` cuando es anotada) y se comprobó que el `action.yml` de ese commit declara `using: node24` (o `composite` en Codecov) y los *inputs* usados. Imágenes de contenedor fijadas por versión: `rhysd/actionlint:1.7.12`, `postgres:16-alpine`, `node:24.12.0-alpine`.
+Cada SHA se obtuvo con `git ls-remote --tags` (etiqueta *peeled* `^{}` cuando es anotada) y se comprobó que el `action.yml` de ese commit declara `using: node24` (o `composite` en Codecov) y los *inputs* usados. Imágenes de contenedor fijadas por versión: `rhysd/actionlint:1.7.12`, `koalaman/shellcheck:v0.11.0`, `postgres:16-alpine`, `node:24.12.0-alpine`.

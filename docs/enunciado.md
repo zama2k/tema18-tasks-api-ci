@@ -7,7 +7,7 @@ Reto: *Setup de CI/CD con tests automáticos*. Estado: **✔ hecho y verificado 
 | Requisito | Dónde se cumple | Estado |
 |---|---|---|
 | API REST con Express, mínimo 3 endpoints | `src/app.js`, `src/routes/tasks.js`: `/health`, `/ready` y 6 rutas de `/api/tasks` | ✔ |
-| Tests unitarios, mínimo 10 | 289 tests en `tests/unit/` (validadores, controlador, repositorios, rutas con supertest, scripts). [Evidencia](../evidencias/local/03-tests-unitarios-cobertura.txt) | ✔ |
+| Tests unitarios, mínimo 10 | 317 tests en `tests/unit/` (validadores, controlador, repositorios, rutas con supertest, scripts). [Evidencia](../evidencias/local/03-tests-unitarios-cobertura.txt) | ✔ |
 | Scripts `test`, `test:unit`, `lint` | `package.json` (además `test:integration`, `test:e2e`, `test:mutation`, `build`, `db:migrate`) | ✔ |
 | Fichero de configuración de ESLint | `eslint.config.js`. **Ver errata 2** | ✔ |
 | CI en push a `main`/`develop` y `pull_request` a `main` | `.github/workflows/ci.yml` (`on:`) | ◐ |
@@ -54,7 +54,7 @@ Reto: *Setup de CI/CD con tests automáticos*. Estado: **✔ hecho y verificado 
 |---|---|
 | `.github/workflows/ci.yml`, `cd-staging.yml` | Igual, más la acción compuesta `setup-project` y `dependabot.yml` |
 | `src/app.js`, `server.js`, `routes/tasks.js`, `controllers/tasks.controller.js`, `models/task.model.js`, `utils/validators.js` | Igual, más `config.js`, `bootstrap.js`, `db/` y `utils/{errors,logger}.js` |
-| `tests/unit/validators.test.js`, `tasks.controller.test.js` | Igual, más otros 16 ficheros unitarios |
+| `tests/unit/validators.test.js`, `tasks.controller.test.js` | Igual, más otros 18 ficheros unitarios |
 | `tests/integration/tasks.api.test.js`, `tests/e2e/tasks.e2e.test.js` | Igual |
 | `jest.config.js`, `package.json`, `.eslintrc.json`, `README.md` | `.eslintrc.json` → `eslint.config.js` (errata 2) |
 
@@ -66,7 +66,7 @@ Reto: *Setup de CI/CD con tests automáticos*. Estado: **✔ hecho y verificado 
 
 | Punto | Estado |
 |---|---|
-| Mínimo 10 tests unitarios | ✔ 289 |
+| Mínimo 10 tests unitarios | ✔ 317 |
 | Coverage ≥ 80 % en líneas, funciones y ramas | ✔ 100 % / 98,78 % / 97,74 % |
 | Jest falla si baja del umbral | ✔ demostrado |
 | CI en cada PR y push a `main` | ◐ |

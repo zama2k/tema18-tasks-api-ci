@@ -6,29 +6,29 @@ $ for image in node:18-bookworm-slim node:20-bookworm-slim node:22-bookworm-slim
 node v18.20.8 / npm 10.8.2
 npm ci exit code: 0
 All files             |     100 |    97.74 |   98.78 |     100 |                   
-Test Suites: 2 skipped, 16 passed, 16 of 18 total
-Tests:       11 skipped, 278 passed, 289 total
+Test Suites: 2 skipped, 18 passed, 18 of 20 total
+Tests:       11 skipped, 306 passed, 317 total
 test:unit exit code: 0
 =============== node:20-bookworm-slim
 node v20.20.2 / npm 10.8.2
 npm ci exit code: 0
 All files             |     100 |    97.74 |   98.78 |     100 |                   
-Test Suites: 2 skipped, 16 passed, 16 of 18 total
-Tests:       11 skipped, 278 passed, 289 total
+Test Suites: 2 skipped, 18 passed, 18 of 20 total
+Tests:       11 skipped, 306 passed, 317 total
 test:unit exit code: 0
 =============== node:22-bookworm-slim
 node v22.23.4 / npm 10.9.9
 npm ci exit code: 0
 All files             |     100 |    97.74 |   98.78 |     100 |                   
-Test Suites: 2 skipped, 16 passed, 16 of 18 total
-Tests:       11 skipped, 278 passed, 289 total
+Test Suites: 2 skipped, 18 passed, 18 of 20 total
+Tests:       11 skipped, 306 passed, 317 total
 test:unit exit code: 0
 =============== node:24-trixie-slim
 node v24.21.0 / npm 11.19.0
 npm ci exit code: 0
 All files             |     100 |    97.74 |   98.78 |     100 |                   
-Test Suites: 2 skipped, 16 passed, 16 of 18 total
-Tests:       11 skipped, 278 passed, 289 total
+Test Suites: 2 skipped, 18 passed, 18 of 20 total
+Tests:       11 skipped, 306 passed, 317 total
 test:unit exit code: 0
 overall: 0
 

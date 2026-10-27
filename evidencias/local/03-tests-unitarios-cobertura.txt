@@ -7,100 +7,18 @@ $ npm run test:unit -- --ci --coverage
 Running one project: unit
 warning: You appear to have cloned an empty repository.
 warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
-fatal: pathspec '*.json' did not match any files
-::warning::publishing failed (attempt 1/3), retrying
-cp: failed to access '/tmp/tmp.0KNpHVkr0I/wt/': Not a directory
-::warning::publishing failed (attempt 2/3), retrying
-cp: failed to access '/tmp/tmp.0KNpHVkr0I/wt/': Not a directory
-::warning::publishing failed (attempt 3/3), retrying
-::error::could not publish badges after 3 attempts
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
 warning: You appear to have cloned an empty repository.
 warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
-fatal: pathspec '*.json' did not match any files
-::warning::publishing failed (attempt 1/3), retrying
-cp: failed to access '/tmp/tmp.kZKGWI4mWM/wt/': Not a directory
-::warning::publishing failed (attempt 2/3), retrying
-cp: failed to access '/tmp/tmp.kZKGWI4mWM/wt/': Not a directory
-::warning::publishing failed (attempt 3/3), retrying
-::error::could not publish badges after 3 attempts
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
 warning: You appear to have cloned an empty repository.
 warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
-fatal: pathspec '*.json' did not match any files
-::warning::publishing failed (attempt 1/3), retrying
-cp: failed to access '/tmp/tmp.sePWea4U1L/wt/': Not a directory
-::warning::publishing failed (attempt 2/3), retrying
-cp: failed to access '/tmp/tmp.sePWea4U1L/wt/': Not a directory
-::warning::publishing failed (attempt 3/3), retrying
-::error::could not publish badges after 3 attempts
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'coverage.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mutation.json', LF will be replaced by CRLF the next time Git touches it
 warning: You appear to have cloned an empty repository.
 warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
-FAIL unit tests/unit/scripts.publish-badges.test.js (23.686 s)
-  ● publish-badges.sh › creates the orphan badges branch on the first run, with only the badge files
-
-    Command failed: bash <repo>\scripts\publish-badges.sh <home>\AppData\Local\Temp\badges-iCwvKb\out
-    fatal: pathspec '*.json' did not match any files
-    ::warning::publishing failed (attempt 1/3), retrying
-    cp: failed to access '/tmp/tmp.0KNpHVkr0I/wt/': Not a directory
-    ::warning::publishing failed (attempt 2/3), retrying
-    cp: failed to access '/tmp/tmp.0KNpHVkr0I/wt/': Not a directory
-    ::warning::publishing failed (attempt 3/3), retrying
-    ::error::could not publish badges after 3 attempts
-
-      29 |
-      30 |   const publish = (sha) =>
-    > 31 |     execFileSync('bash', [SCRIPT, badges], { cwd: work, encoding: 'utf8', env: { ...process.env, GITHUB_SHA: sha } });
-         |     ^
-      32 |
-      33 |   beforeEach(() => {
-      34 |     root = fs.mkdtempSync(path.join(os.tmpdir(), 'badges-'));
-
-      at execFileSync (tests/unit/scripts.publish-badges.test.js:31:5)
-      at Object.publish (tests/unit/scripts.publish-badges.test.js:57:5)
-
-  ● publish-badges.sh › is idempotent: unchanged badges produce no new commit
-
-    Command failed: bash <repo>\scripts\publish-badges.sh <home>\AppData\Local\Temp\badges-JB6HUB\out
-    fatal: pathspec '*.json' did not match any files
-    ::warning::publishing failed (attempt 1/3), retrying
-    cp: failed to access '/tmp/tmp.kZKGWI4mWM/wt/': Not a directory
-    ::warning::publishing failed (attempt 2/3), retrying
-    cp: failed to access '/tmp/tmp.kZKGWI4mWM/wt/': Not a directory
-    ::warning::publishing failed (attempt 3/3), retrying
-    ::error::could not publish badges after 3 attempts
-
-      29 |
-      30 |   const publish = (sha) =>
-    > 31 |     execFileSync('bash', [SCRIPT, badges], { cwd: work, encoding: 'utf8', env: { ...process.env, GITHUB_SHA: sha } });
-         |     ^
-      32 |
-      33 |   beforeEach(() => {
-      34 |     root = fs.mkdtempSync(path.join(os.tmpdir(), 'badges-'));
-
-      at execFileSync (tests/unit/scripts.publish-badges.test.js:31:5)
-      at Object.publish (tests/unit/scripts.publish-badges.test.js:65:5)
-
-  ● publish-badges.sh › adds a commit when a badge changes and leaves no local branch or worktree behind
-
-    Command failed: bash <repo>\scripts\publish-badges.sh <home>\AppData\Local\Temp\badges-fH6oeW\out
-    fatal: pathspec '*.json' did not match any files
-    ::warning::publishing failed (attempt 1/3), retrying
-    cp: failed to access '/tmp/tmp.sePWea4U1L/wt/': Not a directory
-    ::warning::publishing failed (attempt 2/3), retrying
-    cp: failed to access '/tmp/tmp.sePWea4U1L/wt/': Not a directory
-    ::warning::publishing failed (attempt 3/3), retrying
-    ::error::could not publish badges after 3 attempts
-
-      29 |
-      30 |   const publish = (sha) =>
-    > 31 |     execFileSync('bash', [SCRIPT, badges], { cwd: work, encoding: 'utf8', env: { ...process.env, GITHUB_SHA: sha } });
-         |     ^
-      32 |
-      33 |   beforeEach(() => {
-      34 |     root = fs.mkdtempSync(path.join(os.tmpdir(), 'badges-'));
-
-      at execFileSync (tests/unit/scripts.publish-badges.test.js:31:5)
-      at Object.publish (tests/unit/scripts.publish-badges.test.js:73:5)
-
 ----------------------|---------|----------|---------|---------|-------------------
 File                  | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 ----------------------|---------|----------|---------|---------|-------------------
@@ -130,10 +48,11 @@ Branches     : 97.74% ( 173/177 )
 Functions    : 98.78% ( 81/82 )
 Lines        : 100% ( 287/287 )
 ================================================================================
-Test Suites: 1 failed, 19 passed, 20 total
-Tests:       3 failed, 314 passed, 317 total
+
+Test Suites: 20 passed, 20 total
+Tests:       317 passed, 317 total
 Snapshots:   0 total
-Time:        24.27 s
+Time:        6.515 s
 Ran all test suites.
 
-[exit code: 1]
+[exit code: 0]

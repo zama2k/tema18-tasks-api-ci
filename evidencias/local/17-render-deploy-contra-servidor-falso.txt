@@ -1,13 +1,22 @@
-$ node scripts/fake-render-server.js --port 3102 --scenario success > /tmp/fake-render.log 2>&1 & FP=$!; sleep 1; cat /tmp/fake-render.log; export RENDER_API_KEY=test-key RENDER_SERVICE_ID=srv-test; echo '### success scenario'; node scripts/render-deploy.js --api-url http://127.0.0.1:3102/v1 --poll-interval 1 --image ghcr.io/owner/repo@sha256:$(printf 'a%.0s' $(seq 1 64)); echo "exit=$?"; echo '### image without digest is refused'; node scripts/render-deploy.js --api-url http://127.0.0.1:3102/v1 --image ghcr.io/owner/repo:main; echo "exit=$?"; echo '### wrong API key'; RENDER_API_KEY=wrong node scripts/render-deploy.js --api-url http://127.0.0.1:3102/v1 --image ghcr.io/owner/repo@sha256:$(printf 'a%.0s' $(seq 1 64)); echo "exit=$?"; echo '### secrets not configured'; env -u RENDER_API_KEY -u RENDER_SERVICE_ID node scripts/render-deploy.js --image ghcr.io/owner/repo@sha256:$(printf 'a%.0s' $(seq 1 64)); echo "exit=$?"; kill $FP
+$ export RENDER_API_KEY=test-key RENDER_SERVICE_ID=srv-test; IMG=ghcr.io/owner/repo@sha256:$(printf 'a%.0s' $(seq 1 64)); for scenario in success queued; do node scripts/fake-render-server.js --port 3102 --scenario $scenario > /tmp/fake-render.log 2>&1 & FP=$!; sleep 1; echo "### scenario: $scenario ($(cat /tmp/fake-render.log))"; node scripts/render-deploy.js --api-url http://127.0.0.1:3102/v1 --poll-interval 1 --image $IMG; echo "exit=$?"; kill $FP; wait $FP 2>/dev/null; done; node scripts/fake-render-server.js --port 3102 > /tmp/fake-render.log 2>&1 & FP=$!; sleep 1; echo '### image without digest is refused'; node scripts/render-deploy.js --api-url http://127.0.0.1:3102/v1 --image ghcr.io/owner/repo:main; echo "exit=$?"; echo '### wrong API key'; RENDER_API_KEY=wrong node scripts/render-deploy.js --api-url http://127.0.0.1:3102/v1 --image $IMG; echo "exit=$?"; echo '### secrets not configured'; env -u RENDER_API_KEY -u RENDER_SERVICE_ID node scripts/render-deploy.js --image $IMG; echo "exit=$?"; kill $FP
 
-fake Render API listening at http://127.0.0.1:3102/v1 (key: test-key, service: srv-test)
-### success scenario
+### scenario: success (fake Render API listening at http://127.0.0.1:3102/v1 (key: test-key, service: srv-test))
 [render] deploying ghcr.io/owner/repo@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa to service srv-test
 [render] deploy dep-001 created with status "created"
 [render] deploy dep-001: created -> build_in_progress
 [render] deploy dep-001: build_in_progress -> update_in_progress
 [render] deploy dep-001: update_in_progress -> live
 [render] deploy dep-001 is live after 3s
+exit=0
+### scenario: queued (fake Render API listening at http://127.0.0.1:3102/v1 (key: test-key, service: srv-test))
+[render] deploying ghcr.io/owner/repo@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa to service srv-test
+[render] Render answered HTTP 202 without a deploy: looking it up in the recent deploys
+[render] queued deploy not listed yet (attempt 1/8)
+[render] deploy dep-001 created with status "queued"
+[render] deploy dep-001: queued -> build_in_progress
+[render] deploy dep-001: build_in_progress -> update_in_progress
+[render] deploy dep-001: update_in_progress -> live
+[render] deploy dep-001 is live after 8s
 exit=0
 ### image without digest is refused
 ::error::Render deploy failed: --image must be pinned by digest (...@sha256:<64 hex>) so exactly the tested build is deployed

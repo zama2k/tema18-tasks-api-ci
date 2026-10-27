@@ -2,15 +2,15 @@
 
 Formato: decisión, motivo y alternativa descartada. Lo importante primero.
 
-## Un solo artefacto: construir una vez, desplegar por digest
+## Probar el digest publicado y desplegar ese mismo digest
 
-El CI construye la imagen, la verifica (contenedor sano, `/health.commit` correcto, usuario no root, parada con SIGTERM) y la publica en GHCR. Publica además `image-digest.json` con `{sha, digest, image}` como artefacto. El CD:
+El job `Build image` construye y verifica la imagen (contenedor sano, `/health.commit` correcto, usuario no root, parada con SIGTERM). `Publish image` (solo en `main`) la **reconstruye con la misma caché de capas**, la publica en GHCR y **vuelve a verificar el digest ya publicado** con el mismo script. No es un «build once» literal: son dos construcciones del mismo `Dockerfile` y contexto, y la que se despliega es la segunda. La mitigación es que lo desplegado es siempre lo que se acaba de probar *después* de publicarlo; reutilizar el binario del primer job exigiría un `docker save`/`load` entre jobs (cientos de MB y otro punto de fallo), así que se descartó por ser lo más simple. Se publica además `image-digest.json` con `{sha, digest, image}` como artefacto. El CD:
 
 1. descarga ese artefacto **del run de CI que lo disparó** (`run-id: github.event.workflow_run.id`);
 2. comprueba que `sha == workflow_run.head_sha` ([`resolve-image.js`](../scripts/resolve-image.js)); si no coincide, aborta;
 3. pide a Render desplegar `ghcr.io/<owner>/<repo>@sha256:...`; el script rechaza cualquier imagen que no vaya fijada por digest.
 
-*Descartado:* reconstruir la imagen en el CD, o desplegar `:main`/`:latest`. Un *tag* es mutable: entre el CI y el CD podría apuntar a otra cosa.
+*Descartado:* reconstruir la imagen en el CD (sería una tercera construcción sin verificar), o desplegar `:main`/`:latest`. Un *tag* es mutable: entre el CI y el CD podría apuntar a otra cosa.
 
 ## `workflow_run` con `head_sha`
 
@@ -31,15 +31,26 @@ El enunciado pide «cache de `node_modules` basado en `package-lock.json`». Cac
 | `restore-keys` entregaría una caché parcial y, al saltarnos `npm ci`, nadie la corregiría | **Sin `restore-keys`** |
 | Saltarse `npm ci` omite también los *scripts* de instalación | Los módulos restaurados ya los llevan ejecutados; la clave incluye la versión de Node (ABI) |
 
-En el fallo de caché (primera vez, lockfile nuevo) entra la segunda capa: `actions/setup-node` con `cache: npm` cachea `~/.npm`, que es la caché «recomendada» por la documentación de GitHub y hace que `npm ci` baje poco de red. La acción compuesta [`setup-project`](../.github/actions/setup-project/action.yml) expone `cache-hit` y lo escribe en el resumen de cada job; el «segundo run usa la caché» se verifica ahí. Las cachés creadas en un PR solo son visibles para ese PR; las de `main` las pueden leer todos los PRs.
+En el fallo de caché (primera vez, lockfile nuevo) entra la segunda capa: una caché de `~/.npm` (contenido direccionable, por lo que `restore-keys` es seguro ahí) que hace que `npm ci` baje poco de red. Se restaura **solo en ese caso** y no con `cache: npm` de `setup-node`, que la restauraría siempre, incluso con acierto de `node_modules` y en los jobs que no instalan nada. La acción compuesta [`setup-project`](../.github/actions/setup-project/action.yml) no declara outputs (nadie los leía) y escribe el acierto o fallo de caché en el resumen de cada job; el «segundo run usa la caché» se verifica ahí. Las cachés creadas en un PR solo son visibles para ese PR; las de `main` las pueden leer todos los PRs.
 
 ## Permisos mínimos y acciones fijadas
 
 - `permissions: contents: read` a nivel de workflow; se amplía por job: `packages: write` solo en `Publish image`, `contents: write` solo en `Publish coverage badges`, `pull-requests: write` solo en `Coverage report`, `actions: read` solo en el job de despliegue del CD.
 - Todas las acciones de terceros van por **SHA completo con la versión en comentario**; `.github/dependabot.yml` propone las actualizaciones (acciones, npm y Docker).
 - Ningún valor controlable por un usuario (nombres de rama, títulos, entradas) se interpola en `run:`: se pasa por `env:`.
-- `timeout-minutes` en todos los jobs; `concurrency` en CI (cancela solo en PRs) y en CD (`cancel-in-progress: false`, un despliegue a medias es peor que esperar).
+- `timeout-minutes` en todos los jobs; `concurrency` en CI (cancela solo dentro de un mismo PR) y en CD (`cancel-in-progress: false`, un despliegue a medias es peor que esperar).
 - El job `Publish coverage badges` es el único con escritura en el repo, y solo escribe en la rama huérfana `badges`.
+
+## Concurrencia: lo que GitHub hace de verdad
+
+Con `cancel-in-progress: false` GitHub deja **un solo run pendiente** por grupo y **cancela el pendiente anterior** cuando llega otro. Dos consecuencias:
+
+- **CI**: un grupo compartido entre commits haría que un commit de `main` se quedara sin CI, sin imagen y sin despliegue si llegan dos pushes seguidos. El grupo es `ci-pr-<número>` en pull requests (cancela dentro del PR) y `ci-<sha>` en push y ejecuciones manuales (nada se cancela). `queue: max` no se usa: `actionlint` 1.7.12 no lo acepta.
+- **CD**: la cola de un solo hueco es aceptable porque cada despliegue lleva la punta de `main` de su momento. Pero un run que ya estaba esperando puede arrancar cuando `main` ya avanzó; [`check-superseded.js`](../scripts/check-superseded.js) compara `head_sha` con la punta de `main` (API de GitHub) y, si no coincide, salta el despliegue con un `::notice::` y un resumen. Si la API falla, avisa y despliega: perder un despliegue es peor que repetirlo.
+
+## Lint de shell con una versión fijada
+
+`ubuntu-latest` trae `shellcheck` 0.9.0, que no conoce `SC2329` (la regla de «función invocada indirectamente» de 0.11) y emite `SC2317` en las funciones que solo llama un `trap`. En lugar de depender del que traiga el runner, el CI ejecuta `koalaman/shellcheck:v0.11.0` igual que `actionlint`, y los scripts desactivan ambos códigos en esas funciones para que pasen también con 0.9.0 (comprobado con ambas imágenes).
 
 ## `CI OK`: un único check estable para la protección de rama
 

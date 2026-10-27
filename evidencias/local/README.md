@@ -6,7 +6,7 @@ Salidas reales (texto plano, sin colores ANSI y con la ruta del proyecto sustitu
 |---|---|
 | `01-npm-ci-instalacion-limpia` | `npm ci` desde cero con el lockfile y árbol de dependencias |
 | `02-lint` | ESLint sin errores |
-| `03-tests-unitarios-cobertura` | 289 tests unitarios con el umbral del 80 % superado |
+| `03-tests-unitarios-cobertura` | 317 tests unitarios con el umbral del 80 % superado |
 | `04-tests-integracion-postgres` | 27 tests contra PostgreSQL real, incluidas migraciones y el proceso `server.js` |
 | `05-npm-test-completo-con-umbral` | `npm test`: unitarios + integración con cobertura combinada |
 | `06-umbral-cobertura-falla-de-verdad` | Con un módulo sin tests, Jest sale con código 1 |
@@ -20,10 +20,10 @@ Salidas reales (texto plano, sin colores ANSI y con la ruta del proyecto sustitu
 | `14-docker-contenido-de-la-imagen` | Solo dependencias de producción dentro de la imagen |
 | `15-smoke-contra-contenedor-con-postgres` | `smoke.js` contra el contenedor con PostgreSQL (12/12) y contra una URL caída |
 | `16-wait-for-health` | Health check con commit esperado, commit distinto y servicio inexistente |
-| `17-render-deploy-contra-servidor-falso` | `render-deploy.js` contra el servidor falso: éxito, imagen sin digest, clave errónea y secretos ausentes |
+| `17-render-deploy-contra-servidor-falso` | `render-deploy.js` contra el servidor falso: éxito, `202 Queued` (despliegue localizado en el listado), imagen sin digest, clave errónea y secretos ausentes |
 | `18-notificacion-discord` | Omisión con aviso sin secreto, rechazo de URL no válida y payload del embed |
 | `19-actionlint` | `actionlint` 1.7.12 sin avisos en workflows y acción compuesta |
-| `20-shellcheck` | `shellcheck` 0.11.0 sin avisos en los `.sh` |
+| `20-shellcheck` | `shellcheck` v0.11.0 (el del CI) y v0.9.0 (el de `ubuntu-latest`) sin avisos en los `.sh`; el fichero indica la versión de cada ejecución |
 | `21-matriz-node-18-20-22-24-linux` | Unitarios en verde en Node 18, 20, 22 y 24 en contenedores Linux limpios |
 | `22-build-check` | `npm run build` |
 | `23-informe-pr-y-badges` | Comentario del PR y JSON de badges generados con datos reales |

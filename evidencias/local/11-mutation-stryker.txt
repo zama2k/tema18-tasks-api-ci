@@ -1,65 +1,64 @@
 $ npx stryker run --reporters clear-text,progress-append-only,html,json && echo && node scripts/ci-report.js mutation --mutation reports/mutation/mutation.json
 
-08:38:32 (68696) INFO ProjectReader Found 11 of 73 file(s) to be mutated.
-08:38:32 (68696) INFO Instrumenter Instrumented 11 source file(s) with 637 mutant(s)
-08:38:32 (68696) INFO ConcurrencyTokenProvider Creating 2 test runner process(es).
-08:38:32 (68696) INFO DryRunExecutor Starting initial test run (jest test runner with "perTest" coverage analysis). This may take a while.
-08:38:34 (68696) INFO DryRunExecutor Initial test run succeeded. Ran 194 tests in 1 second (net 349 ms, overhead 1029 ms).
-08:38:34 (68696) WARN MutantTestPlanner Detected 73 static mutants (11% of total) that are estimated to take 48% of the time running the tests!
+09:13:15 (60128) INFO ProjectReader Found 11 of 77 file(s) to be mutated.
+09:13:15 (60128) INFO Instrumenter Instrumented 11 source file(s) with 637 mutant(s)
+09:13:15 (60128) INFO ConcurrencyTokenProvider Creating 2 test runner process(es).
+09:13:15 (60128) INFO DryRunExecutor Starting initial test run (jest test runner with "perTest" coverage analysis). This may take a while.
+09:13:17 (60128) INFO DryRunExecutor Initial test run succeeded. Ran 194 tests in 1 second (net 341 ms, overhead 957 ms).
+09:13:17 (60128) WARN MutantTestPlanner Detected 73 static mutants (11% of total) that are estimated to take 48% of the time running the tests!
   You might want to enable "ignoreStatic" to ignore these static mutants for your next run. 
   For more information about static mutants visit: https://stryker-mutator.io/docs/mutation-testing-elements/static-mutants
   (disable "warnings.slow" to ignore this warning)
-Mutation testing 0% (elapsed: <1m, remaining: ~48m) 4/637 tested (2 survived, 0 timed out)
+Mutation testing 0% (elapsed: <1m, remaining: ~50m) 4/637 tested (2 survived, 0 timed out)
 Mutation testing 0% (elapsed: <1m, remaining: ~37m) 13/637 tested (4 survived, 2 timed out)
-Mutation testing 1% (elapsed: <1m, remaining: ~43m) 15/637 tested (5 survived, 3 timed out)
-Mutation testing 3% (elapsed: <1m, remaining: ~18m) 59/637 tested (8 survived, 5 timed out)
-Mutation testing 5% (elapsed: <1m, remaining: ~14m) 73/637 tested (10 survived, 5 timed out)
+Mutation testing 1% (elapsed: <1m, remaining: ~44m) 15/637 tested (5 survived, 3 timed out)
+Mutation testing 3% (elapsed: <1m, remaining: ~19m) 59/637 tested (8 survived, 5 timed out)
+Mutation testing 6% (elapsed: <1m, remaining: ~12m) 78/637 tested (13 survived, 5 timed out)
 Mutation testing 6% (elapsed: ~1m, remaining: ~14m) 78/637 tested (13 survived, 5 timed out)
-Mutation testing 10% (elapsed: ~1m, remaining: ~10m) 173/637 tested (26 survived, 7 timed out)
+Mutation testing 10% (elapsed: ~1m, remaining: ~9m) 178/637 tested (26 survived, 7 timed out)
 Mutation testing 14% (elapsed: ~1m, remaining: ~7m) 207/637 tested (31 survived, 7 timed out)
-Mutation testing 14% (elapsed: ~1m, remaining: ~8m) 209/637 tested (31 survived, 9 timed out)
+Mutation testing 15% (elapsed: ~1m, remaining: ~8m) 209/637 tested (31 survived, 9 timed out)
 Mutation testing 15% (elapsed: ~1m, remaining: ~9m) 210/637 tested (31 survived, 10 timed out)
 Mutation testing 15% (elapsed: ~1m, remaining: ~9m) 216/637 tested (32 survived, 12 timed out)
-Mutation testing 17% (elapsed: ~2m, remaining: ~9m) 225/637 tested (33 survived, 14 timed out)
+Mutation testing 17% (elapsed: ~2m, remaining: ~9m) 231/637 tested (34 survived, 14 timed out)
 Mutation testing 18% (elapsed: ~2m, remaining: ~9m) 234/637 tested (35 survived, 15 timed out)
-Mutation testing 18% (elapsed: ~2m, remaining: ~10m) 240/637 tested (36 survived, 17 timed out)
-Mutation testing 23% (elapsed: ~2m, remaining: ~8m) 305/637 tested (47 survived, 18 timed out)
-Mutation testing 26% (elapsed: ~2m, remaining: ~7m) 376/637 tested (54 survived, 18 timed out)
-Mutation testing 34% (elapsed: ~2m, remaining: ~5m) 439/637 tested (61 survived, 18 timed out)
-Mutation testing 43% (elapsed: ~3m, remaining: ~3m) 499/637 tested (66 survived, 18 timed out)
-Mutation testing 51% (elapsed: ~3m, remaining: ~3m) 559/637 tested (74 survived, 18 timed out)
-Mutation testing 69% (elapsed: ~3m, remaining: ~1m) 591/637 tested (80 survived, 18 timed out)
-Mutation testing 92% (elapsed: ~3m, remaining: <1m) 625/637 tested (84 survived, 19 timed out)
+Mutation testing 19% (elapsed: ~2m, remaining: ~9m) 249/637 tested (38 survived, 17 timed out)
+Mutation testing 24% (elapsed: ~2m, remaining: ~7m) 318/637 tested (49 survived, 18 timed out)
+Mutation testing 26% (elapsed: ~2m, remaining: ~7m) 395/637 tested (59 survived, 18 timed out)
+Mutation testing 38% (elapsed: ~2m, remaining: ~4m) 455/637 tested (61 survived, 18 timed out)
+Mutation testing 45% (elapsed: ~3m, remaining: ~3m) 521/637 tested (69 survived, 18 timed out)
+Mutation testing 57% (elapsed: ~3m, remaining: ~2m) 572/637 tested (77 survived, 18 timed out)
+Mutation testing 76% (elapsed: ~3m, remaining: <1m) 602/637 tested (81 survived, 19 timed out)
 
 All tests
   app.routes.test.js
     ✓ createApp requires a repository [line 13] (killed 1)
-    ✓ operational endpoints GET /health reports status, version, commit and storage [line 19] (killed 3)
+    ✓ operational endpoints GET /health reports status, version, commit and storage [line 19] (killed 2)
     ~ operational endpoints does not advertise the framework [line 32] (covered 32)
     ✓ operational endpoints GET /ready is 200 when the storage answers [line 38] (killed 1)
     ✓ operational endpoints GET /ready is 503 without leaking the cause when the storage is down [line 44] (killed 5)
     ✓ tasks API GET /api/tasks starts empty [line 65] (killed 13)
-    ✓ tasks API POST /api/tasks creates a task and returns 201 with Location [line 71] (killed 35)
-    ✓ tasks API POST /api/tasks answers 400 with field details for invalid data [line 80] (killed 21)
+    ✓ tasks API POST /api/tasks creates a task and returns 201 with Location [line 71] (killed 41)
+    ✓ tasks API POST /api/tasks answers 400 with field details for invalid data [line 80] (killed 20)
     ✓ tasks API POST /api/tasks answers 400 for malformed JSON [line 88] (killed 8)
     ✓ tasks API POST /api/tasks answers 400 when the body is missing entirely [line 95] (killed 7)
     ✓ tasks API POST /api/tasks answers 413 for oversized payloads [line 100] (killed 8)
-    ✓ tasks API GET /api/tasks/:id returns one task [line 106] (killed 19)
+    ✓ tasks API GET /api/tasks/:id returns one task [line 106] (killed 17)
     ✓ tasks API GET /api/tasks/:id answers 404 for an unknown task [line 114] (killed 4)
     ✓ tasks API GET /api/tasks/abc answers 400 [line 120] (killed 1)
     ✓ tasks API GET /api/tasks/0 answers 400 [line 120] (killed 1)
     ✓ tasks API GET /api/tasks/-3 answers 400 [line 120] (killed 1)
     ✓ tasks API GET /api/tasks/1.5 answers 400 [line 120] (killed 1)
     ~ tasks API GET /api/tasks/99999999999 answers 400 [line 120] (covered 62)
-    ✓ tasks API PUT /api/tasks/:id updates only the given fields [line 125] (killed 26)
-    ✓ tasks API PUT /api/tasks/:id answers 404 and 400 appropriately [line 133] (killed 9)
-    ✓ tasks API DELETE /api/tasks/:id answers 204 and then 404 [line 140] (killed 11)
-    ✓ tasks API filters by status and rejects invalid filters [line 148] (killed 10)
+    ✓ tasks API PUT /api/tasks/:id updates only the given fields [line 125] (killed 32)
+    ✓ tasks API PUT /api/tasks/:id answers 404 and 400 appropriately [line 133] (killed 10)
+    ✓ tasks API DELETE /api/tasks/:id answers 204 and then 404 [line 140] (killed 12)
+    ✓ tasks API filters by status and rejects invalid filters [line 148] (killed 11)
     ✓ tasks API sorts by priority and rejects other sort keys [line 159] (killed 21)
     ✓ tasks API GET /api/tasks/stats is not shadowed by the :id route [line 170] (killed 12)
     ~ error handling unknown routes answer a JSON 404 [line 183] (covered 41)
     ✓ error handling unexpected failures answer 500 without leaking internals [line 190] (killed 7)
-    ✓ static UI serves the single page app at / [line 206] (killed 3)
+    ✓ static UI serves the single page app at / [line 206] (killed 2)
   bootstrap.test.js
     ✓ createRepository falls back to in-memory storage without DATABASE_URL [line 7] (killed 5)
     ✓ createRepository uses PostgreSQL when DATABASE_URL is set, without migrating by default [line 15] (killed 5)
@@ -71,7 +70,7 @@ All tests
     ✓ registerShutdown exits with 1 when closing the server fails [line 101] (killed 2)
     ~ registerShutdown exits with 1 when the repository cannot be closed [line 110] (covered 22)
     ✓ registerShutdown forces exit(1) when shutdown never completes [line 118] (killed 2)
-    ✓ start boots the app on the requested port with in-memory storage [line 132] (killed 7)
+    ✓ start boots the app on the requested port with in-memory storage [line 132] (killed 8)
     ~ start rejects when the port is already taken [line 154] (covered 41)
   config.test.js
     ✓ loadConfig uses safe defaults [line 4] (killed 27)
@@ -141,7 +140,7 @@ All tests
     ✘ waitForHealth reports an HTTP error [line 99] (covered 0)
     ✘ waitForHealth reports request timeouts distinctly [line 105] (covered 0)
     ✘ waitForHealth main skips with a notice when no URL is configured [line 112] (covered 0)
-    ✓ smoke tests against the real application every check passes and the created task is cleaned up [line 134] (killed 20)
+    ✓ smoke tests against the real application every check passes and the created task is cleaned up [line 134] (killed 14)
     ✓ smoke tests against the real application main prints one line per check, writes outputs and exits 0 [line 143] (killed 1)
     ✘ smoke tests against the real application main skips with a notice when no URL is configured [line 157] (covered 0)
     ~ smoke tests against a broken deployment a service that cannot persist fails the run, names the failing checks and still tries to clean up [line 169] (covered 222)
@@ -164,7 +163,7 @@ All tests
     ~ createTasksController handlers list filters and sorts the formatted tasks [line 163] (covered 46)
     ~ createTasksController handlers get answers 404 when the repository finds nothing [line 177] (covered 36)
     ~ createTasksController handlers get answers 400 for an invalid id without querying storage [line 187] (covered 29)
-    ✓ createTasksController handlers create stores the sanitized payload and answers 201 with a Location header [line 196] (killed 3)
+    ✓ createTasksController handlers create stores the sanitized payload and answers 201 with a Location header [line 196] (killed 5)
     ~ createTasksController handlers create exposes every validation error in the details [line 213] (covered 98)
     ~ createTasksController handlers update answers 404 when the task does not exist [line 221] (covered 103)
     ~ createTasksController handlers remove answers 204 on success and 404 when nothing was deleted [line 230] (covered 37)
@@ -222,8 +221,8 @@ All tests
     ~ parseId rejects undefined [line 79] (covered 11)
     ~ parseId rejects {} [line 79] (covered 11)
     ~ parseId rejects 1.5 [line 79] (covered 17)
-    ✓ validateTask (create) applies defaults and sanitizes the output [line 88] (killed 18)
-    ✓ validateTask (create) keeps explicit valid values [line 100] (killed 10)
+    ✓ validateTask (create) applies defaults and sanitizes the output [line 88] (killed 12)
+    ✓ validateTask (create) keeps explicit valid values [line 100] (killed 9)
     ~ validateTask (create) ignores unknown properties [line 116] (covered 84)
     ✓ validateTask (create) requires a title [line 123] (killed 4)
     ✓ validateTask (create) reports every invalid field at once [line 129] (killed 10)
@@ -901,6 +900,16 @@ Tests ran:
   and 3 more tests!
 
 
+[Survived] CallExpression
+src/bootstrap.js:63:7
+-         clearTimeout(deadline);
++         ;
+Tests ran:
+    registerShutdown SIGTERM stops the server, closes the repository and exits with 0
+    registerShutdown is wired to SIGTERM and SIGINT
+    registerShutdown a second signal while shutting down is ignored
+
+
 [Survived] OptionalChaining
 src/bootstrap.js:60:9
 -           server.closeIdleConnections?.();
@@ -910,16 +919,6 @@ Tests ran:
     registerShutdown is wired to SIGTERM and SIGINT
     registerShutdown a second signal while shutting down is ignored
   and 3 more tests!
-
-
-[Survived] CallExpression
-src/bootstrap.js:63:7
--         clearTimeout(deadline);
-+         ;
-Tests ran:
-    registerShutdown SIGTERM stops the server, closes the repository and exits with 0
-    registerShutdown is wired to SIGTERM and SIGINT
-    registerShutdown a second signal while shutting down is ignored
 
 
 [Survived] StringLiteral
@@ -1054,10 +1053,10 @@ All files             |  86.56 |   86.56 |      522 |        19 |         84 |  
  bootstrap.js         |  71.15 |   71.15 |       35 |         2 |         15 |        0 |        0 |
  config.js            |  91.30 |   91.30 |       42 |         0 |          4 |        0 |        0 |
 ----------------------|--------|---------|----------|-----------|------------|----------|----------|
-08:42:07 (68696) INFO MutationTestReportHelper Final mutation score of 86.56 is greater than or equal to break threshold 50
-08:42:07 (68696) INFO JsonReporter Your report can be found at: <repo>/reports/mutation/mutation.json
-08:42:07 (68696) INFO HtmlReporter Your report can be found at: <repo>/reports/mutation/mutation.html
-08:42:07 (68696) INFO MutationTestExecutor Done in 3 minutes and 35 seconds.
+09:16:46 (60128) INFO MutationTestReportHelper Final mutation score of 86.56 is greater than or equal to break threshold 50
+09:16:46 (60128) INFO JsonReporter Your report can be found at: <repo>/reports/mutation/mutation.json
+09:16:46 (60128) INFO HtmlReporter Your report can be found at: <repo>/reports/mutation/mutation.html
+09:16:46 (60128) INFO MutationTestExecutor Done in 3 minutes and 30 seconds.
 
 **Mutation score: 86.6%** (522 killed, 19 timeout, 84 survived, 0 without coverage, 625 valid mutants)
 
