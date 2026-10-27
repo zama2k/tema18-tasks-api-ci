@@ -10,17 +10,21 @@ API REST de tareas (Node.js 24, Express 5, PostgreSQL) cuyo objetivo real es el 
 
 ## Nota para la corrección
 
-Todo lo que se puede ejecutar en un ordenador **se ha ejecutado de verdad** y su salida está en [`evidencias/local/`](evidencias/local/README.md). Lo que depende de plataformas externas **todavía no se ha podido comprobar**:
+Todo se ha ejecutado de verdad, en local y en GitHub Actions + Render, el 2026-10-27. Evidencias locales: [`evidencias/local/`](evidencias/local/README.md). Evidencias reales, con enlace a cada run: [`evidencias/github/`](evidencias/github/README.md).
 
-| Pendiente | Por qué | Cuándo se añadirá |
-|---|---|---|
-| Ejecuciones reales en GitHub Actions (capturas de checks, comentario del PR, artefactos, badges) | El repositorio aún no está publicado | Tras publicar el repo |
-| Despliegue real en Render y URL de staging | Requiere cuenta de Render y secretos | Tras publicar el repo y crear el servicio |
-| Notificación real en Discord | Requiere el webhook | Igual |
-| Protección de rama real | `scripts/setup-github.sh` está escrito y probado con un `gh` falso, pero no se ha ejecutado contra GitHub | Tras publicar |
-| Segunda ejecución con caché (`cache-hit: true`) | Solo observable en Actions; el job escribe el resultado en el *step summary* | Tras publicar |
+| Comprobado | Evidencia |
+|---|---|
+| CI completo en `main`: lint, unitarios en Node 18/20/22/24, integración con PostgreSQL, E2E en 2 shards, mutación, imagen publicada en GHCR y badges | [CI 40490398070](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40490398070), success |
+| CD Staging por `workflow_run`: despliegue por digest en Render, health check con commit, 12 smoke tests y aviso a Discord | [CD Staging 40490936060](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40490936060) (intento 2), success. Staging: <https://tema18-tasks-api-ci-staging.onrender.com/health> |
+| Protección de `main`: PR, 1 aprobación, rama al día y 11 checks requeridos | Aplicada en GitHub; el PR #3 se mergeó con bypass de administrador |
+| El CI **bloquea de verdad**: un upgrade de Dependabot que rompe Node 18 deja el PR en rojo y `Build image` sin ejecutarse | [CI 40490586196](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40490586196), failure en `Unit tests (Node 18)` |
+| Corrección tras el hallazgo: CI en `main` y CD Staging con el commit del merge del PR #3 (`084901b`) | [CI 40523567823](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40523567823) y [CD Staging 40524244137](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40524244137), success; staging sirve `084901b` |
+| PR con comentario pegajoso de cobertura y mutación | [PR #3](https://github.com/zama2k/tema18-tasks-api-ci/pull/3), [CI 40521896747](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40521896747) |
+| Caché de `node_modules` en la segunda ejecución | `Cache hit for: node-modules-...` en el [CI 40521896747](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40521896747); en el primero (40490398070) fue `Cache not found` |
 
-Los marcadores `__GH_OWNER__` (badges y URLs) se sustituirán por el usuario de GitHub al publicar. Detalle completo en [Limitaciones honestas](#limitaciones-honestas).
+**No verificado por nosotros:** la recepción de los mensajes de Discord. Los jobs `Notify Discord` terminaron en success, pero no hemos visto los mensajes en el canal. No hay capturas de pantalla.
+
+Detalle completo en [Limitaciones honestas](#limitaciones-honestas).
 
 ## Qué demuestra este repositorio
 
@@ -142,7 +146,7 @@ Si falta un secreto, el paso correspondiente se **salta con `::notice::`** (Rend
 
 ## Cobertura, mutación y tests: lo medido
 
-Cifras de la ejecución local (ver evidencias; las de Actions se añadirán al publicar):
+Cifras de la ejecución local ([evidencias](evidencias/local/README.md)). Las cifras de cobertura y mutación coinciden con las del comentario del [PR #3](https://github.com/zama2k/tema18-tasks-api-ci/pull/3) en Actions:
 
 | Qué | Resultado |
 |---|---|
@@ -158,9 +162,9 @@ Cifras de la ejecución local (ver evidencias; las de Actions se añadirán al p
 
 El umbral **falla de verdad**: añadir un módulo sin tests baja la cobertura al 54-58 % y Jest sale con código 1 ([evidencia](evidencias/local/06-umbral-cobertura-falla-de-verdad.txt)). Con la clave del enunciado (`coverageThresholds`, en plural) Jest solo emite un *warning* y sale con 0 ([evidencia](evidencias/local/07-errata-coverageThresholds-plural-no-falla.txt)).
 
-## Configurar GitHub tras publicar el repo
+## Configurar GitHub
 
-1. Subir el repo y sustituir el marcador: `sd '__GH_OWNER__' 'tu-usuario' $(rg -l __GH_OWNER__)` (o con `sed -i`).
+1. Subir el repositorio a tu cuenta (`https://github.com/<usuario>/tema18-tasks-api-ci`) y cambiar `zama2k` por tu usuario en las insignias de este README.
 2. Crear en Render un servicio web **desde imagen existente** `ghcr.io/<usuario>/tema18-tasks-api-ci:main`, *health check path* `/health`, y (opcional) una base PostgreSQL con `DATABASE_URL` y `AUTO_MIGRATE=true`. Detalles en [`docs/plataformas.md`](docs/plataformas.md).
 3. Tras el primer push a `main`, poner el paquete de GHCR en **público** (Package settings) o dar credenciales de registro a Render.
 4. Ejecutar `scripts/setup-github.sh` (con `gh` autenticado; `--dry-run` para ver qué hará).
@@ -174,7 +178,7 @@ El umbral **falla de verdad**: añadir un módulo sin tests baja la cobertura al
 | `CODECOV_TOKEN` | Secret (opcional) | Repositorio | Subida a Codecov; sin él se salta con aviso |
 | `staging` | Environment | Repositorio | Solo desplegable desde `main` |
 
-**Protección de `main`** (la aplica el script): PR obligatorio, 1 aprobación, ramas al día, conversaciones resueltas, sin *force-push*, y los checks `CI OK`, `Lint`, `Unit tests (Node 18/20/22/24)`, `Integration tests`, `E2E tests (shard 1/2)`, `Mutation tests` y `Build image`. Con una sola cuenta nadie puede aprobar su propio PR, así que `enforce_admins` queda en `false` y el merge se hace **con bypass de administrador**; es una decisión consciente y está documentada en el script.
+**Protección de `main`** (la aplica el script): PR obligatorio, 1 aprobación, ramas al día, conversaciones resueltas, sin *force-push*, y los checks `CI OK`, `Lint`, `Unit tests (Node 18/20/22/24)`, `Integration tests`, `E2E tests (shard 1/2)`, `Mutation tests` y `Build image`. Con una sola cuenta nadie puede aprobar su propio PR, así que `enforce_admins` queda en `false` y el merge se hace **con bypass de administrador** (`gh pr merge --admin`; así se mergeó el [PR #3](https://github.com/zama2k/tema18-tasks-api-ci/pull/3)); es una decisión consciente y está documentada en el script.
 
 ## Decisiones de diseño y en qué mejora a lo habitual
 
@@ -194,13 +198,15 @@ Resumen; el razonamiento completo está en [`docs/decisiones.md`](docs/decisione
 
 ## Limitaciones honestas
 
-- **No se ha ejecutado ningún workflow en GitHub Actions.** Se validan sintácticamente con actionlint y cada paso lógico se ha ejecutado en local (scripts, contenedor, E2E, etc.), pero la integración entre acciones (`actions/cache`, `download-artifact` entre runs, `type=gha`, `strategy.job-total`) solo se confirmará en el primer run.
-- **Render y Discord no se han probado contra servicios reales.** El cliente de Render sigue la documentación oficial consultada el 2026-10-27, y se prueba contra un servidor falso; un cambio de la API o una restricción del plan no se detectaría hasta el primer despliegue. El tratamiento del `202 Queued` (buscar el despliegue en el listado) se prueba solo contra el servidor falso, cuyo formato de listado sigue la documentación.
+- **Discord:** los avisos se enviaron (los jobs `Notify Discord` terminaron en success), pero no hemos visto su recepción en el canal.
+- **El primer CD Staging se saltó el despliegue.** El [run 40490936060](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40490936060) se lanzó antes de configurar Render: el intento 1 terminó en verde, pero con `::notice::` de que faltaban `RENDER_API_KEY` y `RENDER_SERVICE_ID`, sin health check ni smoke tests. Tras configurar Render, el intento 2 desplegó de verdad (23 s hasta `live`). Un verde del CD no basta: hay que mirar que el health check y los smoke tests no estén *skipped*.
+- **El tratamiento del `202 Queued` de Render** (buscar el despliegue en el listado) solo se ha probado contra el servidor falso: en el despliegue real Render devolvió un despliegue ya creado (`update_in_progress`), así que esa rama no se ha ejercitado.
+- **Dependabot:** su primer PR de `@babel/core` 8 exigía Node `^22.18 || >=24.11` y rompió `Unit tests (Node 18)` ([CI 40490586196](https://github.com/zama2k/tema18-tasks-api-ci/actions/runs/40490586196)); otro (PR #1) subía la imagen base de `node:24` a `node:26`, una versión que la matriz no prueba, y **el CI lo dejó pasar en verde** (el job `Build image` solo comprueba que la imagen arranca): ahí el CI no bastaba. Se cerraron los PR #1 y #2 y el [PR #3](https://github.com/zama2k/tema18-tasks-api-ci/pull/3) añade a `dependabot.yml` reglas `ignore` de *semver-major* para `@babel/*` y para la imagen `node`: subir de mayor es un cambio deliberado de matriz, `engines` y dependencias a la vez.
 - **`Publish image` reconstruye la imagen** (misma caché de capas, mismo `Dockerfile` y contexto) en lugar de reutilizar la del job `Build image`: no es un «build once» literal. La mitigación es probar el digest ya publicado antes de que el CD lo vea; reutilizar el binario exigiría pasar un `docker save` entre jobs y se descartó por complejidad.
 - **Un run pendiente del CD puede cancelarse** (comportamiento de GitHub). Es inocuo porque el último run despliega la punta de `main`, y el control de *superseded* evita lo contrario; si la API de GitHub no responde, ese control avisa y deja desplegar.
 - **Sin rollback automático.** Un despliegue fallido deja el job en rojo y avisa por Discord; volver atrás implica relanzar el despliegue de un digest anterior (los digests de cada commit de `main` quedan en GHCR y en el artefacto de cada run).
 - **Solo staging.** No hay producción en este ejercicio; el entorno `production` con revisor obligatorio pertenece al ejercicio de CD.
-- **Las versiones recientes de las acciones** (`checkout` v7, `cache` v6, etc.) se han fijado por SHA tras comprobar su `action.yml`, pero no pude ejecutarlas; Dependabot propondrá actualizaciones.
+- **Las versiones recientes de las acciones** (`checkout` v7, `cache` v6, etc.) se fijaron por SHA tras comprobar su `action.yml` y se han ejecutado sin incidencias en los runs enlazados; Dependabot propondrá actualizaciones.
 - **La mutación se ejecuta en Node 24** (Stryker 10 exige Node 22 o superior) y tarda unos 3,5 minutos aquí; es el job más lento.
 - **Los tests de scripts con `bash`, `git` o `jq` se omiten si la herramienta no existe** (en las imágenes `slim` de la matriz local se omitieron 11 tests; en Windows con Git Bash y en los runners de Ubuntu se ejecutan).
 - **`SIGTERM` real solo se prueba en Linux/Docker**: en Windows un proceso hijo no puede recibirlo, por lo que el test de integración se limita a comprobar que arranca y se detiene; la parada ordenada se verifica con `docker stop` ([evidencia](evidencias/local/13-docker-verificar-imagen.txt)).
@@ -217,5 +223,6 @@ public/              UI estática
 tests/               unit, integration, e2e
 scripts/             despliegue Render, health check, smoke, Discord, informes, setup de GitHub
 docs/                enunciado.md, decisiones.md, plataformas.md
+evidencias/github/   ejecuciones reales en GitHub Actions y Render (enlaces)
 evidencias/local/    salidas reales de las verificaciones locales
 ```

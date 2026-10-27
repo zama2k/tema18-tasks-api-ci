@@ -31,4 +31,4 @@ Salidas reales (texto plano, sin colores ANSI y con la ruta del proyecto sustitu
 | `25-publicacion-de-badges-rama-badges` | `publish-badges.sh` contra un remoto local: creación, idempotencia y actualización |
 | `26-docker-compose-config` | `docker-compose.yml` válido (servicios y perfil `app`) |
 
-**No hay evidencias de GitHub Actions, Render, Vercel ni Discord reales**: se añadirán tras publicar el repositorio.
+Esta carpeta contiene solo las comprobaciones locales. Las ejecuciones reales en GitHub Actions y Render están en [`../github/README.md`](../github/README.md). La recepción de los mensajes de Discord no la hemos verificado.
