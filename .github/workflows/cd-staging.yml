@@ -1,0 +1,220 @@
+name: CD Staging
+
+# Runs after the CI workflow finished on main. The image deployed here is the one CI built,
+# tested and pushed for the very same commit: build once, deploy by digest.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# One staging deploy at a time. Never cancel a running deploy: a half-finished rollout is worse
+# than waiting; newer runs queue up behind the current one.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  # Everything below is derived from the commit CI validated, never from the HEAD of main.
+  HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+
+jobs:
+  deploy-staging:
+    name: Deploy to staging
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
+    permissions:
+      contents: read
+      actions: read # download the artifact of the CI run
+    outputs:
+      deployed: ${{ steps.deploy.outputs.deployed }}
+      digest: ${{ steps.image.outputs.digest }}
+      image-ref: ${{ steps.image.outputs.image-ref }}
+      deploy-seconds: ${{ steps.deploy.outputs.deploy-seconds }}
+      url: ${{ vars.STAGING_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: ./.github/actions/setup-project
+        with:
+          install: 'false'
+
+      - name: Download the image digest published by CI
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-digest
+          path: image-digest
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve and validate the image
+        id: image
+        run: node scripts/resolve-image.js --file image-digest/image-digest.json --expect-sha "$HEAD_SHA"
+
+      # Skips with a ::notice:: when RENDER_API_KEY / RENDER_SERVICE_ID are not configured.
+      - name: Deploy the image to Render
+        id: deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
+          IMAGE_REF: ${{ steps.image.outputs.image-ref }}
+        run: node scripts/render-deploy.js --image "$IMAGE_REF"
+
+      - name: Warn when STAGING_URL is missing
+        if: steps.deploy.outputs.deployed == 'true' && vars.STAGING_URL == ''
+        run: echo "::warning::STAGING_URL is not set in the staging environment. Health check and smoke tests will be skipped."
+
+  health-check:
+    name: Health check
+    needs: deploy-staging
+    if: ${{ needs.deploy-staging.outputs.deployed == 'true' && needs.deploy-staging.outputs.url != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      attempts: ${{ steps.health.outputs.attempts }}
+      health-seconds: ${{ steps.health.outputs.health-seconds }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: ./.github/actions/setup-project
+        with:
+          install: 'false'
+
+      # Exponential backoff (3s ... 30s, 20 attempts) and the answer must carry this commit.
+      - name: Wait for /health to report the new commit
+        id: health
+        env:
+          STAGING_URL: ${{ needs.deploy-staging.outputs.url }}
+        run: node scripts/wait-for-health.js --url "$STAGING_URL" --expect-commit "$HEAD_SHA"
+
+  smoke-tests:
+    name: Smoke tests
+    needs: [deploy-staging, health-check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      checks: ${{ steps.smoke.outputs.checks }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: ./.github/actions/setup-project
+        with:
+          install: 'false'
+
+      - name: Run smoke tests against staging
+        id: smoke
+        env:
+          STAGING_URL: ${{ needs.deploy-staging.outputs.url }}
+        run: node scripts/smoke.js --url "$STAGING_URL"
+
+  notify:
+    name: Notify Discord
+    needs: [deploy-staging, health-check, smoke-tests]
+    if: ${{ always() && github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion != 'cancelled' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: ./.github/actions/setup-project
+        with:
+          install: 'false'
+
+      - name: Work out the overall result
+        id: result
+        env:
+          CI_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          CI_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          DEPLOY_RESULT: ${{ needs.deploy-staging.result }}
+          DEPLOYED: ${{ needs.deploy-staging.outputs.deployed }}
+          HEALTH_RESULT: ${{ needs.health-check.result }}
+          SMOKE_RESULT: ${{ needs.smoke-tests.result }}
+        run: |
+          status=success
+          details=""
+          if [ "$CI_CONCLUSION" != "success" ]; then
+            status=failure
+            details="CI finished with '${CI_CONCLUSION}' on main, nothing was deployed. CI run: ${CI_RUN_URL}"
+          elif [ "$DEPLOY_RESULT" = "failure" ]; then
+            status=failure
+            details="The deploy to Render failed or timed out."
+          elif [ "$DEPLOYED" != "true" ]; then
+            status=skipped
+            details="Render is not configured (RENDER_API_KEY / RENDER_SERVICE_ID); the image was published but not deployed."
+          elif [ "$HEALTH_RESULT" = "skipped" ]; then
+            status=skipped
+            details="Deployed, but STAGING_URL is not configured so health check and smoke tests did not run."
+          elif [ "$HEALTH_RESULT" != "success" ]; then
+            status=failure
+            details="Deployed, but the health check never saw the new commit."
+          elif [ "$SMOKE_RESULT" != "success" ]; then
+            status=failure
+            details="Deployed and healthy, but the smoke tests failed."
+          fi
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+          echo "details=${details}" >> "$GITHUB_OUTPUT"
+
+      - name: Deployment summary
+        env:
+          STATUS: ${{ steps.result.outputs.status }}
+          DETAILS: ${{ steps.result.outputs.details }}
+          URL: ${{ needs.deploy-staging.outputs.url }}
+          DIGEST: ${{ needs.deploy-staging.outputs.digest }}
+          DEPLOY_SECONDS: ${{ needs.deploy-staging.outputs.deploy-seconds }}
+          HEALTH_SECONDS: ${{ needs.health-check.outputs.health-seconds }}
+          HEALTH_ATTEMPTS: ${{ needs.health-check.outputs.attempts }}
+          SMOKE_CHECKS: ${{ needs.smoke-tests.outputs.checks }}
+        run: |
+          {
+            echo "## Staging deployment: ${STATUS}"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Commit | \`${HEAD_SHA}\` |"
+            echo "| URL | ${URL:-not configured} |"
+            echo "| Image digest | \`${DIGEST:-n/a}\` |"
+            echo "| Render deploy time | ${DEPLOY_SECONDS:-n/a} s |"
+            echo "| Health check | ${HEALTH_SECONDS:-n/a} s (${HEALTH_ATTEMPTS:-n/a} attempts) |"
+            echo "| Smoke tests | ${SMOKE_CHECKS:-n/a} |"
+            [ -z "$DETAILS" ] || { echo ""; echo "> ${DETAILS}"; }
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Skips with a ::notice:: when DISCORD_WEBHOOK_URL is not configured; never fails the pipeline.
+      - name: Send the Discord notification
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          STATUS: ${{ steps.result.outputs.status }}
+          DETAILS: ${{ steps.result.outputs.details }}
+          URL: ${{ needs.deploy-staging.outputs.url }}
+          DIGEST: ${{ needs.deploy-staging.outputs.digest }}
+          DEPLOY_SECONDS: ${{ needs.deploy-staging.outputs.deploy-seconds }}
+          ACTOR: ${{ github.event.workflow_run.actor.login }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node scripts/notify-discord.js \
+            --status "$STATUS" --sha "$HEAD_SHA" --run-url "$RUN_URL" \
+            --url "$URL" --digest "$DIGEST" --deploy-seconds "$DEPLOY_SECONDS" \
+            --actor "$ACTOR" --details "$DETAILS"
