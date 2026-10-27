@@ -72,7 +72,12 @@ function createFakeRender({ apiKey = 'test-key', serviceId = 'srv-test', scenari
     state,
     start: (port = 0) =>
       new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve(`http://127.0.0.1:${server.address().port}/v1`))),
-    stop: () => new Promise((resolve) => server.close(resolve)),
+    // Node 18 keeps idle keep-alive sockets open on close(); drop them so tests do not hang.
+    stop: () =>
+      new Promise((resolve) => {
+        server.close(resolve);
+        server.closeAllConnections?.();
+      }),
   };
 }
 

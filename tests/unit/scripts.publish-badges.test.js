@@ -7,8 +7,9 @@ const SCRIPT = path.join(__dirname, '../../scripts/publish-badges.sh');
 
 const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 
-function hasBash() {
+function hasBashAndGit() {
   try {
+    execFileSync('git', ['--version'], { stdio: 'ignore' });
     execFileSync('bash', ['--version'], { stdio: 'ignore' });
     return true;
   } catch {
@@ -17,7 +18,7 @@ function hasBash() {
 }
 
 // Hermetic: the "remote" is a bare repository in a temp folder, nothing leaves the machine.
-(hasBash() ? describe : describe.skip)('publish-badges.sh', () => {
+(hasBashAndGit() ? describe : describe.skip)('publish-badges.sh', () => {
   let root;
   let origin;
   let work;

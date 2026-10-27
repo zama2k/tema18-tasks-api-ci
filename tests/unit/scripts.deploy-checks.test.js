@@ -18,7 +18,12 @@ function listen(handler) {
   });
 }
 
-const close = (server) => new Promise((resolve) => server.close(resolve));
+// closeAllConnections: Node 18 keeps keep-alive sockets open and close() would wait for them.
+const close = (server) =>
+  new Promise((resolve) => {
+    server.close(resolve);
+    server.closeAllConnections?.();
+  });
 
 describe('util', () => {
   test('backoffDelay doubles and is capped', () => {

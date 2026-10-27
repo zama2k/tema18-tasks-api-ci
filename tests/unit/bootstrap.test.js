@@ -144,7 +144,10 @@ describe('start', () => {
       expect(repository.storage).toBe('memory');
     } finally {
       processRef.mockRestore();
-      await new Promise((resolve) => server.close(resolve));
+      await new Promise((resolve) => {
+        server.close(resolve);
+        server.closeAllConnections?.();
+      });
     }
   });
 
