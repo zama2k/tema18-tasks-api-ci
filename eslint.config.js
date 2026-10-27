@@ -39,6 +39,11 @@ module.exports = [
     languageOptions: { globals: { ...globals.jest } },
   },
   {
+    // page.evaluate() callbacks run in the browser
+    files: ['tests/e2e/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
     files: ['public/**/*.js'],
     languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
   },

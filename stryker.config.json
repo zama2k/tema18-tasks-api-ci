@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "jest",
+  "jest": { "configFile": "jest.stryker.config.js" },
+  "mutate": ["src/**/*.js", "!src/server.js", "!src/db/cli.js"],
+  "coverageAnalysis": "perTest",
+  "reporters": ["clear-text", "progress", "html", "json"],
+  "htmlReporter": { "fileName": "reports/mutation/mutation.html" },
+  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
+  "thresholds": { "high": 80, "low": 60, "break": 50 },
+  "tempDirName": ".stryker-tmp",
+  "concurrency": 2,
+  "timeoutMS": 10000,
+  "ignorePatterns": ["coverage", "reports", "playwright-report", "test-results", "blob-report", "evidencias", "docs"]
+}
