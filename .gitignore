@@ -1,0 +1,19 @@
+node_modules/
+coverage/
+reports/
+.stryker-tmp/
+playwright-report/
+blob-report/
+test-results/
+playwright/.cache/
+
+# Secrets and local configuration: only the example file is tracked
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

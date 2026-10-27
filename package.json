@@ -1,0 +1,37 @@
+{
+  "name": "tema18-tasks-api-ci",
+  "version": "1.0.0",
+  "description": "Tasks REST API used to demonstrate a CI/CD pipeline driven by automated tests",
+  "private": true,
+  "license": "MIT",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "lint": "eslint .",
+    "test": "jest --coverage",
+    "test:unit": "jest --selectProjects unit",
+    "test:integration": "jest --selectProjects integration",
+    "test:e2e": "playwright test",
+    "test:mutation": "stryker run",
+    "build": "node scripts/build-check.js",
+    "db:migrate": "node src/db/migrate.js"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@stryker-mutator/core": "^10.1.1",
+    "@stryker-mutator/jest-runner": "^10.1.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "jest": "^30.5.2",
+    "supertest": "^7.3.1"
+  }
+}
