@@ -23,6 +23,10 @@ updates:
     groups:
       dev-dependencies:
         dependency-type: development
+    ignore:
+      # Babel 8 requires Node ^22.18 || >=24.11, but the API supports Node 18 (engines and CI matrix).
+      - dependency-name: "@babel/*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /
@@ -30,3 +34,7 @@ updates:
       interval: weekly
     commit-message:
       prefix: "build(deps)"
+    ignore:
+      # The runtime image must be a Node line the CI matrix tests (18-24): a new major is a deliberate change.
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
