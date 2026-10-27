@@ -46,7 +46,8 @@ function hasBash() {
     fs.writeFileSync(path.join(badges, 'coverage.json'), '{"message":"91%"}\n');
   });
 
-  afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
+  // Git marks object files read-only and Windows antivirus may hold them briefly: retry the cleanup.
+  afterEach(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
   test('creates the orphan badges branch on the first run, with only the badge files', () => {
     publish('abcdef1234567');
