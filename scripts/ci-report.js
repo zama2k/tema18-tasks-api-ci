@@ -5,6 +5,7 @@
  *   node scripts/ci-report.js comment --unit <coverage-summary.json> [--integration <file>]
  *        [--mutation <mutation.json>] [--sha <sha>] [--run-url <url>] [--out <file>]
  *   node scripts/ci-report.js badges  --unit <file> [--mutation <file>] --out-dir <dir>
+ *   node scripts/ci-report.js mutation --mutation <mutation.json>      (one-line markdown summary)
  *
  * The PR comment starts with a hidden marker so the workflow can find it and update it
  * in place instead of posting a new comment on every push.
@@ -127,6 +128,17 @@ function readOptional(file, summarize) {
 
 function main(argv) {
   const { command, options } = parseArgs(argv);
+
+  if (command === 'mutation') {
+    if (!options.mutation) throw new Error('--mutation <mutation.json> is required');
+    const { score, killed, timeout, survived, noCoverage, total } = summarizeMutation(readJson(options.mutation));
+    process.stdout.write(
+      `**Mutation score: ${score}%** (${killed} killed, ${timeout} timeout, ${survived} survived, ${noCoverage} without coverage, ${total} valid mutants)
+`,
+    );
+    return;
+  }
+
   if (!options.unit) throw new Error('--unit <coverage-summary.json> is required');
 
   const unit = summarizeCoverage(readJson(options.unit));
@@ -157,7 +169,7 @@ function main(argv) {
     return;
   }
 
-  throw new Error(`unknown command "${command}" (expected comment, summary or badges)`);
+  throw new Error(`unknown command "${command}" (expected comment, summary, badges or mutation)`);
 }
 
 if (require.main === module) {

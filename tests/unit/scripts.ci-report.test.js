@@ -181,6 +181,17 @@ describe('command line', () => {
     expect(fs.existsSync(path.join(outDir, 'mutation.json'))).toBe(false);
   });
 
+  test('mutation prints a one-line summary and needs --mutation', () => {
+    const write = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    try {
+      main(['mutation', '--mutation', path.join(dir, 'mutation.json')]);
+      expect(write.mock.calls[0][0]).toBe('**Mutation score: 66.7%** (3 killed, 1 timeout, 1 survived, 1 without coverage, 6 valid mutants)\n');
+    } finally {
+      write.mockRestore();
+    }
+    expect(() => main(['mutation'])).toThrow(/--mutation/);
+  });
+
   test('fails without --unit', () => {
     expect(() => main(['comment'])).toThrow(/--unit/);
   });

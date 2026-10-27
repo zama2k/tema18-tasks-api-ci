@@ -1,0 +1,68 @@
+name: Setup project
+description: >
+  Installs Node.js and the npm dependencies. node_modules is cached under an exact key
+  (OS + architecture + exact Node version + hash of package-lock.json); on a hit `npm ci` is skipped.
+  On a miss, setup-node's cache of ~/.npm still makes `npm ci` fast.
+
+inputs:
+  node-version:
+    description: Node.js version (major or exact) to install
+    default: '24'
+  install:
+    description: Set to "false" to only install Node.js (jobs that need no dependencies)
+    default: 'true'
+
+outputs:
+  cache-hit:
+    description: '"true" when node_modules was restored from the exact-key cache'
+    value: ${{ steps.deps-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
+  node-version:
+    description: Exact Node.js version that was installed
+    value: ${{ steps.node.outputs.node-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      id: node
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+        cache-dependency-path: package-lock.json
+
+    # Exact key and NO restore-keys: a partial match would restore node_modules built from a
+    # different lockfile or Node ABI, and we would then skip `npm ci` on top of it.
+    - name: Restore node_modules
+      id: deps-cache
+      if: inputs.install == 'true'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+
+    - name: Install dependencies
+      if: inputs.install == 'true' && steps.deps-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm ci --no-audit --no-fund
+
+    - name: Report cache usage
+      if: inputs.install == 'true'
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.deps-cache.outputs.cache-hit }}
+        NODE_VERSION: ${{ steps.node.outputs.node-version }}
+        JOB_NAME: ${{ github.job }}
+      run: |
+        if [ "$CACHE_HIT" = "true" ]; then
+          echo "node_modules cache: HIT (npm ci skipped)"
+          result="HIT (npm ci skipped)"
+        else
+          echo "node_modules cache: MISS (npm ci executed)"
+          result="MISS (npm ci executed)"
+        fi
+        {
+          echo "### node_modules cache - ${JOB_NAME}"
+          echo "- Node.js: \`${NODE_VERSION}\`"
+          echo "- Result: **${result}**"
+        } >> "$GITHUB_STEP_SUMMARY"

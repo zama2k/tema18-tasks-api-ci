@@ -1,0 +1,576 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege by default; jobs that need more declare it themselves.
+permissions:
+  contents: read
+
+# A new push to a PR supersedes the previous run. Pushes to main/develop are never cancelled:
+# every commit that reaches main must get its own verdict (and its own image).
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PRIMARY_NODE: '24'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ env.PRIMARY_NODE }}
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Lint workflows (actionlint)
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
+
+      - name: Lint shell scripts (shellcheck)
+        run: shellcheck scripts/*.sh
+
+  test-unit:
+    name: Unit tests (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18, 20, 22, 24]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # Jest fails the step when coverage is below `coverageThreshold` (80% in jest.config.js).
+      - name: Unit tests with coverage threshold
+        run: npm run test:unit -- --ci --coverage
+
+      # One artifact per matrix cell: upload-artifact v4+ rejects duplicate names.
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-unit-node-${{ matrix.node-version }}
+          path: coverage/
+          retention-days: 14
+          if-no-files-found: warn
+
+  test-integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tasks
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tasks"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Throw-away CI database: credentials are intentionally public.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tasks
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ env.PRIMARY_NODE }}
+
+      - name: Apply migrations to the service database
+        run: npm run db:migrate
+
+      # The 80% gate applies to the unit suite; this run only reports integration coverage.
+      - name: Integration tests against PostgreSQL
+        run: npm run test:integration -- --ci --coverage --coverageThreshold='{}' --coverageDirectory=coverage-integration
+
+      - name: Upload integration coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-integration
+          path: coverage-integration/
+          retention-days: 14
+          if-no-files-found: warn
+
+  test-e2e:
+    name: E2E tests (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tasks
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tasks"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tasks
+      SHARD_INDEX: ${{ matrix.shard }}
+      SHARD_TOTAL: ${{ strategy.job-total }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ env.PRIMARY_NODE }}
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Chromium and system dependencies
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      # Browsers are cached, but OS libraries are not part of the cache.
+      - name: Install system dependencies only
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Playwright tests (shard)
+        run: npx playwright test --shard="${SHARD_INDEX}/${SHARD_TOTAL}"
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 7
+          if-no-files-found: warn
+
+      # Screenshots, videos and traces are only produced for failing tests.
+      - name: Upload failure artifacts (screenshots, videos, traces)
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-failures-shard-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  e2e-report:
+    name: E2E report
+    needs: test-e2e
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ env.PRIMARY_NODE }}
+
+      - name: Download blob reports
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: blob-report-*
+          path: all-blob-reports
+          merge-multiple: true
+
+      - name: Merge shards into one HTML report
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  mutation:
+    name: Mutation tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ env.PRIMARY_NODE }}
+
+      # Stryker exits non-zero when the score drops below `thresholds.break` (50%).
+      # That blocks pull requests; on pushes it is reported as a warning only.
+      - name: Stryker
+        id: stryker
+        continue-on-error: ${{ github.event_name != 'pull_request' }}
+        run: npx stryker run
+
+      - name: Warn about a non-blocking mutation failure
+        if: steps.stryker.outcome == 'failure' && github.event_name != 'pull_request'
+        run: echo "::warning::Mutation score is below the break threshold. Not blocking on push; it blocks pull requests."
+
+      - name: Publish mutation score
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f reports/mutation/mutation.json ]; then
+            node scripts/ci-report.js mutation --mutation reports/mutation/mutation.json | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Stryker did not produce a report"
+          fi
+
+      - name: Upload mutation report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 14
+          if-no-files-found: warn
+
+  coverage-report:
+    name: Coverage report
+    needs: [test-unit, test-integration, mutation]
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.test-unit.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      HAS_CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN != '' }}
+      # PRs from forks get a read-only token: they cannot comment.
+      CAN_COMMENT: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ env.PRIMARY_NODE }}
+          install: 'false'
+
+      - name: Download unit coverage
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage-unit-node-${{ env.PRIMARY_NODE }}
+          path: coverage-unit
+
+      - name: Download integration coverage
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage-integration
+          path: coverage-integration
+
+      - name: Download mutation report
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: mutation-report
+          path: mutation-report
+
+      - name: Build report
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node scripts/ci-report.js comment \
+            --unit coverage-unit/coverage-summary.json \
+            --integration coverage-integration/coverage-summary.json \
+            --mutation mutation-report/mutation.json \
+            --sha "$HEAD_SHA" --run-url "$RUN_URL" --out comment.md
+          node scripts/ci-report.js summary --unit coverage-unit/coverage-summary.json \
+            --integration coverage-integration/coverage-summary.json \
+            --mutation mutation-report/mutation.json >> "$GITHUB_STEP_SUMMARY"
+
+      # Sticky comment: found by its hidden marker and updated in place, never duplicated.
+      - name: Create or update the PR comment
+        if: env.CAN_COMMENT == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('comment.md', 'utf8');
+            const marker = body.split('\n')[0];
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find(
+              (c) => c.user.login === 'github-actions[bot]' && c.body && c.body.startsWith(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              core.info(`Updated comment ${existing.id}`);
+            } else {
+              const { data } = await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              core.info(`Created comment ${data.id}`);
+            }
+
+      - name: Skip the PR comment (fork)
+        if: env.CAN_COMMENT != 'true'
+        run: echo "::notice::Pull requests from forks have a read-only token; the report is in the job summary instead."
+
+      - name: Upload coverage to Codecov
+        if: env.HAS_CODECOV_TOKEN == 'true'
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage-unit/lcov.info
+          fail_ci_if_error: false
+
+      - name: Codecov not configured
+        if: env.HAS_CODECOV_TOKEN != 'true'
+        run: echo "::notice::CODECOV_TOKEN is not set, skipping the Codecov upload (the PR comment does not need it)."
+
+  build:
+    name: Build image
+    needs: [lint, test-unit, test-integration, test-e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ env.PRIMARY_NODE }}
+
+      - name: Build check
+        run: npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build image (not pushed)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          push: false
+          tags: tasks-api:ci
+          build-args: GIT_SHA=${{ github.sha }}
+          cache-from: type=gha,scope=image
+          cache-to: type=gha,mode=max,scope=image
+
+      - name: Verify the container (health, commit, non-root, graceful stop)
+        env:
+          COMMIT: ${{ github.sha }}
+        run: scripts/verify-image.sh tasks-api:ci "$COMMIT" 3000
+
+  publish-image:
+    name: Publish image
+    needs: build
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # metadata-action lowercases the repository name (GHCR requires lowercase).
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=main
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: GIT_SHA=${{ github.sha }}
+          cache-from: type=gha,scope=image
+          cache-to: type=gha,mode=max,scope=image
+          provenance: false
+
+      # The artifact that gets deployed is the one in the registry, so that is what we test.
+      - name: Verify the published image by digest
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          image_ref="$(printf '%s' "$IMAGE" | tr '[:upper:]' '[:lower:]')@${DIGEST}"
+          echo "IMAGE_REF=${image_ref}" >> "$GITHUB_ENV"
+          scripts/verify-image.sh "$image_ref" "$COMMIT" 3000
+
+      - name: Record the immutable digest for the CD workflow
+        env:
+          COMMIT: ${{ github.sha }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          mkdir -p image-digest
+          node -e '
+            const [sha, digest, ref, tags] = process.argv.slice(1);
+            const record = { sha, digest, image: ref.split("@")[0], ref, tags: tags.split("\n").filter(Boolean) };
+            require("node:fs").writeFileSync("image-digest/image-digest.json", JSON.stringify(record, null, 2) + "\n");
+          ' "$COMMIT" "$DIGEST" "$IMAGE_REF" "$TAGS"
+          cat image-digest/image-digest.json
+          {
+            echo "### Published image"
+            echo "- Image: \`${IMAGE_REF}\`"
+            echo "- Commit: \`${COMMIT}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload image digest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-digest
+          path: image-digest/image-digest.json
+          retention-days: 30
+          if-no-files-found: error
+
+  publish-coverage:
+    name: Publish coverage badges
+    needs: [test-unit, mutation]
+    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test-unit.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # only this job may push: it writes the "badges" branch
+    env:
+      HAS_CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: ./.github/actions/setup-project
+        with:
+          node-version: ${{ env.PRIMARY_NODE }}
+          install: 'false'
+
+      - name: Download unit coverage
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage-unit-node-${{ env.PRIMARY_NODE }}
+          path: coverage-unit
+
+      - name: Download mutation report
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: mutation-report
+          path: mutation-report
+
+      - name: Generate badge files
+        run: |
+          node scripts/ci-report.js badges \
+            --unit coverage-unit/coverage-summary.json \
+            --mutation mutation-report/mutation.json \
+            --out-dir badges-out
+
+      - name: Publish to the badges branch
+        run: scripts/publish-badges.sh badges-out
+
+      - name: Upload coverage to Codecov
+        if: env.HAS_CODECOV_TOKEN == 'true'
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage-unit/lcov.info
+          fail_ci_if_error: false
+
+  # Single, stable name for branch protection: it does not change when the matrix does.
+  ci-ok:
+    name: CI OK
+    if: ${{ always() }}
+    needs:
+      - lint
+      - test-unit
+      - test-integration
+      - test-e2e
+      - e2e-report
+      - mutation
+      - coverage-report
+      - build
+      - publish-image
+      - publish-coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check every job finished without failing
+        env:
+          NEEDS: ${{ toJson(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          if echo "$NEEDS" | jq -e 'to_entries | map(select(.value.result == "failure" or .value.result == "cancelled")) | length > 0' >/dev/null; then
+            echo "::error::At least one job failed or was cancelled"
+            exit 1
+          fi
+          echo "All jobs succeeded or were legitimately skipped."
