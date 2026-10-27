@@ -36,7 +36,7 @@ fi
 if [ -n "${GH_REPO:-}" ]; then
   repo="$GH_REPO"
 elif [ "$dry_run" = true ]; then
-  repo="__GH_OWNER__/tema18-tasks-api-ci"
+  repo="zama2k/tema18-tasks-api-ci"
 else
   repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 fi

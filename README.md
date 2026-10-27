@@ -1,9 +1,9 @@
 # Tasks API con CI/CD basado en tests automáticos
 
-[![CI](https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/workflows/ci.yml/badge.svg)](https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/workflows/ci.yml)
-[![CD Staging](https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/workflows/cd-staging.yml/badge.svg)](https://github.com/__GH_OWNER__/tema18-tasks-api-ci/actions/workflows/cd-staging.yml)
-![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2F__GH_OWNER__%2Ftema18-tasks-api-ci%2Fbadges%2Fcoverage.json)
-![Mutation score](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2F__GH_OWNER__%2Ftema18-tasks-api-ci%2Fbadges%2Fmutation.json)
+[![CI](https://github.com/zama2k/tema18-tasks-api-ci/actions/workflows/ci.yml/badge.svg)](https://github.com/zama2k/tema18-tasks-api-ci/actions/workflows/ci.yml)
+[![CD Staging](https://github.com/zama2k/tema18-tasks-api-ci/actions/workflows/cd-staging.yml/badge.svg)](https://github.com/zama2k/tema18-tasks-api-ci/actions/workflows/cd-staging.yml)
+![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzama2k%2Ftema18-tasks-api-ci%2Fbadges%2Fcoverage.json)
+![Mutation score](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzama2k%2Ftema18-tasks-api-ci%2Fbadges%2Fmutation.json)
 ![Node](https://img.shields.io/badge/node-18%20%7C%2020%20%7C%2022%20%7C%2024-339933)
 
 API REST de tareas (Node.js 24, Express 5, PostgreSQL) cuyo objetivo real es el **pipeline**: ningún código llega a staging sin pasar lint, tests unitarios con umbral de cobertura del 80 %, tests de integración contra PostgreSQL real, E2E con navegador y mutation testing. La imagen Docker que se despliega se identifica por su *digest* y es la que se verifica justo después de publicarla.
