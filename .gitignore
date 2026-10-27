@@ -1,9 +1,14 @@
 node_modules/
 coverage/
+coverage-*/
 reports/
 .stryker-tmp/
 playwright-report/
 blob-report/
+all-blob-reports/
+badges-out/
+image-digest/
+comment.md
 test-results/
 playwright/.cache/
 

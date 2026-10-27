@@ -2,6 +2,7 @@
 .github
 node_modules
 coverage
+coverage-*
 reports
 playwright-report
 blob-report
