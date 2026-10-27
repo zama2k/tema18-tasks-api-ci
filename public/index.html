@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tasks</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Tasks</h1>
+
+      <form id="task-form" novalidate>
+        <label for="title">Title</label>
+        <input id="title" name="title" type="text" maxlength="120" autocomplete="off" />
+
+        <label for="priority">Priority</label>
+        <select id="priority" name="priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+
+        <button type="submit">Add task</button>
+      </form>
+      <p id="form-error" role="alert" hidden></p>
+
+      <section aria-label="Task list">
+        <div class="toolbar">
+          <label for="filter">Show</label>
+          <select id="filter">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+          <p id="stats" aria-live="polite"></p>
+        </div>
+        <ul id="task-list"></ul>
+        <p id="empty" hidden>No tasks yet.</p>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

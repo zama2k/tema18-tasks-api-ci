@@ -5,7 +5,8 @@
 module.exports = {
   testEnvironment: 'node',
   coverageDirectory: 'coverage',
-  collectCoverageFrom: ['src/**/*.js', '!src/server.js'],
+  // server.js and db/cli.js are process entry points: they are exercised by the integration and E2E suites
+  collectCoverageFrom: ['src/**/*.js', '!src/server.js', '!src/db/cli.js'],
   coverageReporters: ['text', 'text-summary', 'lcov', 'json-summary'],
   coverageThreshold: {
     global: {
