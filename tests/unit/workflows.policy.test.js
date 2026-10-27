@@ -33,3 +33,19 @@ describe('shellcheck', () => {
     }
   });
 });
+
+describe('shell scripts in git', () => {
+  test('every .sh is committed with the executable bit (workflows call them directly)', () => {
+    const { execFileSync } = require('node:child_process');
+    let listing;
+    try {
+      listing = execFileSync('git', ['ls-files', '-s', 'scripts/*.sh'], { cwd: ROOT, encoding: 'utf8' });
+    } catch {
+      return; // not a git checkout (e.g. a source archive): nothing to verify
+    }
+    const entries = listing.trim().split('\n').filter(Boolean);
+
+    expect(entries.length).toBeGreaterThanOrEqual(3);
+    for (const entry of entries) expect(entry).toMatch(/^100755 /);
+  });
+});
