@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 
 # ---- Stage 1: production dependencies only (no dev tooling ends up in the image) ----
-FROM node:24.12.0-alpine AS deps
+FROM node:26.12.1-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev --ignore-scripts
 
 # ---- Stage 2: runtime ----
-FROM node:24.12.0-alpine AS runtime
+FROM node:26.12.1-alpine AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production \
