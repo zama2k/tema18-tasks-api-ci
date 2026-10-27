@@ -41,8 +41,9 @@ jobs:
       - name: Lint workflows (actionlint)
         run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
 
+      # Pinned image: the shellcheck preinstalled on ubuntu-latest changes with the runner image.
       - name: Lint shell scripts (shellcheck)
-        run: shellcheck scripts/*.sh
+        run: docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 scripts/*.sh
 
   test-unit:
     name: Unit tests (Node ${{ matrix.node-version }})

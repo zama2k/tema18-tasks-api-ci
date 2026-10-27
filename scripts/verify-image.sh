@@ -13,7 +13,7 @@ expected_commit="${2:?usage: verify-image.sh <image> <expected-commit> [host-por
 host_port="${3:-3000}"
 name="verify-image-$$"
 
-# shellcheck disable=SC2329 # invoked indirectly through the EXIT trap
+# shellcheck disable=SC2317,SC2329 # invoked indirectly through the EXIT trap (SC2317: shellcheck < 0.10, SC2329: >= 0.11)
 cleanup() {
   docker rm -f "$name" >/dev/null 2>&1 || true
 }
