@@ -72,7 +72,6 @@ async function main(argv, env = process.env) {
   const url = options.url || env.STAGING_URL;
   if (!url) {
     annotate.notice('STAGING_URL is not configured: skipping the health check.');
-    setOutput('checked', 'false', env);
     return 0;
   }
 
@@ -85,7 +84,6 @@ async function main(argv, env = process.env) {
   });
 
   const seconds = Math.round(result.elapsedMs / 1000);
-  setOutput('checked', 'true', env);
   setOutput('attempts', result.attempts, env);
   setOutput('health-seconds', seconds, env);
   appendSummary(`### Health check\n- URL: ${url}\n- Healthy after **${result.attempts}** attempt(s), ${seconds}s\n- Commit: \`${result.body.commit}\``, env);

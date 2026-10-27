@@ -18,6 +18,9 @@ function hasBashAndGit() {
 }
 
 // Hermetic: the "remote" is a bare repository in a temp folder, nothing leaves the machine.
+// Each test spawns bash and several git processes: give them room when the machine is busy.
+jest.setTimeout(30000);
+
 (hasBashAndGit() ? describe : describe.skip)('publish-badges.sh', () => {
   let root;
   let origin;

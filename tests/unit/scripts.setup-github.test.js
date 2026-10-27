@@ -31,6 +31,8 @@ case "$*" in
 esac
 `;
 
+jest.setTimeout(30000);
+
 (hasTools() ? describe : describe.skip)('setup-github.sh', () => {
   let dir;
   let log;

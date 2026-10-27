@@ -146,7 +146,7 @@ describe('smoke tests against the real application', () => {
     const write = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
     try {
       expect(await smokeMain(['--url', url], env)).toBe(0);
-      expect(fs.readFileSync(env.GITHUB_OUTPUT, 'utf8')).toMatch(/passed=true/);
+      expect(fs.readFileSync(env.GITHUB_OUTPUT, 'utf8')).toContain('checks=12/12');
       expect(fs.readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8')).toContain('### Smoke tests');
     } finally {
       write.mockRestore();

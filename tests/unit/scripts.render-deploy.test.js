@@ -329,7 +329,9 @@ describe('render-deploy command line (main)', () => {
       expect(code).toBe(0);
       const outputs = fs.readFileSync(output, 'utf8');
       expect(outputs).toContain('deployed=true');
-      expect(outputs).toContain('deploy-id=dep-001');
+      expect(outputs).toContain('deploy-seconds=');
+      expect(outputs).not.toContain('deploy-id');
+      expect(fs.readFileSync(summary, 'utf8')).toContain('dep-001');
       expect(fs.readFileSync(summary, 'utf8')).toContain(IMAGE);
     } finally {
       await fake.stop();

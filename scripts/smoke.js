@@ -146,7 +146,6 @@ async function main(argv, env = process.env) {
   const baseUrl = options.url || env.STAGING_URL;
   if (!baseUrl) {
     annotate.notice('STAGING_URL is not configured: skipping the smoke tests.');
-    setOutput('ran', 'false', env);
     return 0;
   }
 
@@ -156,8 +155,6 @@ async function main(argv, env = process.env) {
   }
 
   appendSummary(renderSummary(baseUrl, outcome), env);
-  setOutput('ran', 'true', env);
-  setOutput('passed', outcome.ok, env);
   setOutput('checks', `${outcome.results.filter((r) => r.ok).length}/${outcome.results.length}`, env);
 
   if (!outcome.ok) annotate.error('Smoke tests failed');

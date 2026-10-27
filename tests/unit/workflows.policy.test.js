@@ -79,3 +79,37 @@ describe('concurrency', () => {
     }
   });
 });
+
+describe('setup-project composite action', () => {
+  const action = read('.github/actions/setup-project/action.yml');
+
+  test('setup-node does not restore ~/.npm itself: it is restored only on a node_modules miss', () => {
+    expect(action).not.toMatch(/^\s+cache:\s/m);
+    const npmCacheStep = action.slice(action.indexOf('Restore npm download cache'));
+    expect(npmCacheStep.slice(0, 250)).toContain("steps.deps-cache.outputs.cache-hit != 'true'");
+    expect(npmCacheStep.slice(0, 250)).toContain("inputs.install == 'true'");
+  });
+
+  test('node_modules key is exact: no restore-keys on it', () => {
+    const nodeModulesStep = action.slice(action.indexOf('Restore node_modules'), action.indexOf('- name: Restore npm download cache'));
+    expect(nodeModulesStep).not.toMatch(/restore-keys:/);
+    expect(nodeModulesStep).toContain("hashFiles('package-lock.json')");
+  });
+
+  test('declares no outputs that nobody reads', () => {
+    expect(action).not.toMatch(/^outputs:/m);
+  });
+});
+
+describe('step outputs written by the scripts', () => {
+  test('every setOutput name is consumed by a workflow', () => {
+    const workflows = read('.github/workflows/ci.yml') + read('.github/workflows/cd-staging.yml');
+    const names = new Set();
+    for (const script of fs.readdirSync(path.join(ROOT, 'scripts')).filter((f) => f.endsWith('.js'))) {
+      for (const match of read(`scripts/${script}`).matchAll(/setOutput\('([\w-]+)'/g)) names.add(match[1]);
+    }
+
+    expect(names.size).toBeGreaterThan(5);
+    for (const name of names) expect(workflows).toContain(`outputs.${name}`);
+  });
+});

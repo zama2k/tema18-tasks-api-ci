@@ -2,7 +2,8 @@ name: Setup project
 description: >
   Installs Node.js and the npm dependencies. node_modules is cached under an exact key
   (OS + architecture + exact Node version + hash of package-lock.json); on a hit `npm ci` is skipped.
-  On a miss, setup-node's cache of ~/.npm still makes `npm ci` fast.
+  Only on a miss the npm download cache (~/.npm) is restored, so `npm ci` stays fast without
+  restoring anything that is not needed on a hit.
 
 inputs:
   node-version:
@@ -12,24 +13,16 @@ inputs:
     description: Set to "false" to only install Node.js (jobs that need no dependencies)
     default: 'true'
 
-outputs:
-  cache-hit:
-    description: '"true" when node_modules was restored from the exact-key cache'
-    value: ${{ steps.deps-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
-  node-version:
-    description: Exact Node.js version that was installed
-    value: ${{ steps.node.outputs.node-version }}
-
 runs:
   using: composite
   steps:
+    # No `cache:` here on purpose: setup-node would restore ~/.npm even on a node_modules hit
+    # (and in jobs that install nothing). The npm cache is handled below, only when it is needed.
     - name: Set up Node.js
       id: node
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ inputs.node-version }}
-        cache: npm
-        cache-dependency-path: package-lock.json
 
     # Exact key and NO restore-keys: a partial match would restore node_modules built from a
     # different lockfile or Node ABI, and we would then skip `npm ci` on top of it.
@@ -41,11 +34,21 @@ runs:
         path: node_modules
         key: node-modules-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
 
+    # npm's cache is content addressed, so a partial match (restore-keys) is safe here.
+    - name: Restore npm download cache
+      if: inputs.install == 'true' && steps.deps-cache.outputs.cache-hit != 'true'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.npm
+        key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: npm-${{ runner.os }}-
+
     - name: Install dependencies
       if: inputs.install == 'true' && steps.deps-cache.outputs.cache-hit != 'true'
       shell: bash
       run: npm ci --no-audit --no-fund
 
+    # The "second run uses the cache" evidence lives in the job summary.
     - name: Report cache usage
       if: inputs.install == 'true'
       shell: bash

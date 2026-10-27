@@ -242,7 +242,6 @@ async function main(argv, env = process.env) {
   const seconds = Math.round(result.durationMs / 1000);
   log(`deploy ${result.deployId} is live after ${seconds}s`);
   setOutput('deployed', 'true', env);
-  setOutput('deploy-id', result.deployId, env);
   setOutput('deploy-seconds', seconds, env);
   appendSummary(`### Render deploy\n- Deploy: \`${result.deployId}\`\n- Image: \`${imageUrl}\`\n- Time to live: **${seconds}s**`, env);
   return 0;
