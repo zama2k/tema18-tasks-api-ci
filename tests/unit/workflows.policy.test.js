@@ -49,3 +49,33 @@ describe('shell scripts in git', () => {
     for (const entry of entries) expect(entry).toMatch(/^100755 /);
   });
 });
+
+describe('concurrency', () => {
+  test('CI uses one group per commit on push and cancels only superseded PR runs', () => {
+    const ci = read('.github/workflows/ci.yml');
+
+    expect(ci).toContain("group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.sha }}");
+    expect(ci).toContain("cancel-in-progress: ${{ github.event_name == 'pull_request' }}");
+    expect(ci).not.toContain('github.ref }}\n');
+  });
+
+  test('CD never cancels a running deploy and documents that only the latest pending run waits', () => {
+    const cd = read('.github/workflows/cd-staging.yml');
+
+    expect(cd).toMatch(/group: deploy-staging\n\s+cancel-in-progress: false/);
+    expect(cd).toContain('GitHub keeps only ONE pending run per group');
+    expect(cd).not.toMatch(/never cancel[^\n]*queue up/i);
+  });
+
+  test('CD skips commits superseded on main before touching the image or Render', () => {
+    const cd = read('.github/workflows/cd-staging.yml');
+    const supersededAt = cd.indexOf('id: superseded');
+
+    expect(supersededAt).toBeGreaterThan(-1);
+    for (const step of ['Download the image digest', 'Resolve and validate the image', 'Deploy the image to Render']) {
+      const stepAt = cd.indexOf(`- name: ${step}`);
+      expect(stepAt).toBeGreaterThan(supersededAt);
+      expect(cd.slice(stepAt, stepAt + 200)).toContain("steps.superseded.outputs.superseded != 'true'");
+    }
+  });
+});

@@ -11,8 +11,10 @@ on:
 permissions:
   contents: read
 
-# One staging deploy at a time. Never cancel a running deploy: a half-finished rollout is worse
-# than waiting; newer runs queue up behind the current one.
+# One staging deploy at a time and a running deploy is never cancelled (a half-finished rollout
+# is worse than waiting). GitHub keeps only ONE pending run per group: when several merges pile up
+# behind a running deploy, only the latest waits and the intermediate runs are cancelled. A stale
+# run that does start is stopped by the "superseded" check below.
 concurrency:
   group: deploy-staging
   cancel-in-progress: false
@@ -35,6 +37,7 @@ jobs:
       actions: read # download the artifact of the CI run
     outputs:
       deployed: ${{ steps.deploy.outputs.deployed }}
+      superseded: ${{ steps.superseded.outputs.superseded }}
       digest: ${{ steps.image.outputs.digest }}
       image-ref: ${{ steps.image.outputs.image-ref }}
       deploy-seconds: ${{ steps.deploy.outputs.deploy-seconds }}
@@ -50,7 +53,16 @@ jobs:
         with:
           install: 'false'
 
+      # A run that waited behind a long deploy may belong to a commit that is no longer the tip.
+      - name: Skip commits already superseded on main
+        id: superseded
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: node scripts/check-superseded.js --repo "$REPO" --branch main --sha "$HEAD_SHA"
+
       - name: Download the image digest published by CI
+        if: steps.superseded.outputs.superseded != 'true'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: image-digest
@@ -60,11 +72,13 @@ jobs:
 
       - name: Resolve and validate the image
         id: image
+        if: steps.superseded.outputs.superseded != 'true'
         run: node scripts/resolve-image.js --file image-digest/image-digest.json --expect-sha "$HEAD_SHA"
 
       # Skips with a ::notice:: when RENDER_API_KEY / RENDER_SERVICE_ID are not configured.
       - name: Deploy the image to Render
         id: deploy
+        if: steps.superseded.outputs.superseded != 'true'
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
@@ -150,6 +164,7 @@ jobs:
           CI_RUN_URL: ${{ github.event.workflow_run.html_url }}
           DEPLOY_RESULT: ${{ needs.deploy-staging.result }}
           DEPLOYED: ${{ needs.deploy-staging.outputs.deployed }}
+          SUPERSEDED: ${{ needs.deploy-staging.outputs.superseded }}
           HEALTH_RESULT: ${{ needs.health-check.result }}
           SMOKE_RESULT: ${{ needs.smoke-tests.result }}
         run: |
@@ -161,6 +176,9 @@ jobs:
           elif [ "$DEPLOY_RESULT" = "failure" ]; then
             status=failure
             details="The deploy to Render failed or timed out."
+          elif [ "$SUPERSEDED" = "true" ]; then
+            status=skipped
+            details="A newer commit reached main; this older run was skipped so it does not overwrite the newer deploy."
           elif [ "$DEPLOYED" != "true" ]; then
             status=skipped
             details="Render is not configured (RENDER_API_KEY / RENDER_SERVICE_ID); the image was published but not deployed."

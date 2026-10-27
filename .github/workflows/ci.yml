@@ -11,10 +11,12 @@ on:
 permissions:
   contents: read
 
-# A new push to a PR supersedes the previous run. Pushes to main/develop are never cancelled:
-# every commit that reaches main must get its own verdict (and its own image).
+# Pull requests: a new push cancels the previous run of the same PR.
+# Pushes and manual runs: one group PER COMMIT, so runs of different commits never share a group.
+# (With a shared group and cancel-in-progress: false GitHub would still cancel the PENDING run,
+# and the commit that run belonged to would never get its CI, image or deploy.)
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
